@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('[MIDDLEWARE] Missing Supabase credentials');
+    console.warn('[PROXY] Missing Supabase credentials');
     return supabaseResponse;
   }
 
@@ -33,25 +33,23 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Get and refresh the session - this is critical for maintaining auth state
-  // Use getSession() instead of getUser() as it also refreshes expired sessions
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  
-  if (sessionError) {
-    console.error('[MIDDLEWARE] Session error:', sessionError);
-  }
+  // Get and authenticate the user by contacting Supabase Auth server
+  // This is more secure than getSession() which reads directly from cookies
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  const user = session?.user || null;
+  if (userError) {
+    console.error('[PROXY] Auth error:', userError);
+  }
 
   // Log auth state for debugging (only in development)
   if (process.env.NODE_ENV === 'development') {
-    console.log('[MIDDLEWARE]', request.nextUrl.pathname, 'User:', user?.email || 'anonymous');
+    console.log('[PROXY]', request.nextUrl.pathname, 'User:', user?.email || 'anonymous');
   }
 
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
-      console.log('[MIDDLEWARE] Admin route access denied - no user');
+      console.log('[PROXY] Admin route access denied - no user');
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirect', request.nextUrl.pathname);
@@ -66,11 +64,11 @@ export async function middleware(request: NextRequest) {
       .single();
 
     if (profileError) {
-      console.error('[MIDDLEWARE] Error fetching profile:', profileError);
+      console.error('[PROXY] Error fetching profile:', profileError);
     }
 
     if (!profile || profile.role !== 'admin') {
-      console.log('[MIDDLEWARE] Admin route access denied - not admin');
+      console.log('[PROXY] Admin route access denied - not admin');
       const url = request.nextUrl.clone();
       url.pathname = '/';
       return NextResponse.redirect(url);
