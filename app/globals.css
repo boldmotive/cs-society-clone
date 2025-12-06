@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
+/* ===== BASE STYLES ===== */
+
 html,
 body {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -13,6 +17,74 @@ body {
   background-color: #0a1628;
   color: #e2e8f0;
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ===== RESPONSIVE TYPOGRAPHY ===== */
+
+/* Mobile-first heading sizes */
+.responsive-h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.responsive-h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+.responsive-h3 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+@media (min-width: 640px) {
+  .responsive-h1 {
+    font-size: 2.5rem;
+  }
+  .responsive-h2 {
+    font-size: 1.75rem;
+  }
+  .responsive-h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-h1 {
+    font-size: 3rem;
+  }
+  .responsive-h2 {
+    font-size: 2rem;
+  }
+  .responsive-h3 {
+    font-size: 1.75rem;
+  }
+}
+
+/* ===== RESPONSIVE CONTAINER ===== */
+
+.container-responsive {
+  width: 100%;
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
 }
 
 /* ===== KEYFRAME ANIMATIONS ===== */
@@ -151,33 +223,74 @@ body {
   z-index: 0;
 }
 
+/* Mobile-first orb sizes (smaller for performance) */
 .gradient-orb-1 {
-  width: 500px;
-  height: 500px;
+  width: 250px;
+  height: 250px;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
-  top: -150px;
-  right: -100px;
+  top: -75px;
+  right: -50px;
   animation: orbPulse 8s ease-in-out infinite;
 }
 
 .gradient-orb-2 {
-  width: 400px;
-  height: 400px;
+  width: 200px;
+  height: 200px;
   background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%);
-  bottom: -100px;
-  left: -100px;
+  bottom: -50px;
+  left: -50px;
   animation: orbFloat 12s ease-in-out infinite;
 }
 
 .gradient-orb-3 {
-  width: 300px;
-  height: 300px;
+  width: 150px;
+  height: 150px;
   background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   animation: orbPulse 10s ease-in-out infinite;
   animation-delay: 2s;
+}
+
+/* Larger orbs on tablet and up */
+@media (min-width: 768px) {
+  .gradient-orb-1 {
+    width: 400px;
+    height: 400px;
+    top: -100px;
+    right: -75px;
+  }
+  .gradient-orb-2 {
+    width: 300px;
+    height: 300px;
+    bottom: -75px;
+    left: -75px;
+  }
+  .gradient-orb-3 {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+/* Full-size orbs on desktop */
+@media (min-width: 1024px) {
+  .gradient-orb-1 {
+    width: 500px;
+    height: 500px;
+    top: -150px;
+    right: -100px;
+  }
+  .gradient-orb-2 {
+    width: 400px;
+    height: 400px;
+    bottom: -100px;
+    left: -100px;
+  }
+  .gradient-orb-3 {
+    width: 300px;
+    height: 300px;
+  }
 }
 
 /* Mesh gradient overlay for additional depth */
@@ -600,13 +713,17 @@ body {
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  /* Touch-friendly padding - minimum 44px touch target */
+  padding: 0.875rem 1rem;
   background-color: #1a2a42;
   border: 1px solid rgba(107, 114, 128, 0.3);
   border-radius: 0.5rem;
   color: #ffffff;
+  /* 16px minimum to prevent iOS zoom on focus */
   font-size: 1rem;
   transition: all 0.3s ease;
+  /* Ensure proper box sizing */
+  box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -638,4 +755,87 @@ select.form-input {
 textarea.form-input {
   resize: vertical;
   min-height: 100px;
+}
+
+/* ===== RESPONSIVE FORM GRID ===== */
+
+/* Form grid that stacks on mobile */
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .form-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== TOUCH-FRIENDLY BUTTON SIZES ===== */
+
+/* Ensure all buttons have minimum touch target size on mobile */
+@media (max-width: 640px) {
+  .btn-animated,
+  .btn-animated-secondary,
+  .btn-glow,
+  .btn-secondary,
+  .discord-btn,
+  .btn-oauth {
+    min-height: 44px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+
+/* Hide on mobile, show on desktop */
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: block;
+  }
+}
+
+/* Show on mobile, hide on desktop */
+.show-mobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .show-mobile {
+    display: none;
+  }
+}
+
+/* Responsive spacing */
+.py-responsive {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+  .py-responsive {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .py-responsive {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+}
+
+/* ===== SAFE AREA INSETS FOR MOBILE ===== */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

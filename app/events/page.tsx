@@ -97,17 +97,17 @@ export default function EventsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#0a1628' }}>
-        <div style={{ fontSize: '1.25rem', color: '#9ca3af' }}>Loading events...</div>
+        <div className="text-base sm:text-lg md:text-xl text-gray-400">Loading events...</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full py-20" style={{ backgroundColor: '#0a1628' }}>
-      <div style={{ maxWidth: '80rem', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '1rem', paddingRight: '1rem' }}>
-        <div style={{ marginBottom: '3rem' }} className="animate-fade-in-up">
-          <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '1rem' }}>Upcoming Events</h1>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>
+    <div className="w-full py-12 sm:py-16 md:py-20" style={{ backgroundColor: '#0a1628' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 sm:mb-10 md:mb-12 animate-fade-in-up">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">Upcoming Events</h1>
+          <p className="text-base sm:text-lg md:text-xl text-gray-400">
             From hands-on workshops to chill study jams. Come learn, hang out, and meet your future best friends.
           </p>
         </div>
@@ -124,22 +124,22 @@ export default function EventsPage() {
               >
                 {/* Date Badge - Top of card */}
                 <div className="event-card-date">
-                  <div style={{ fontSize: '0.75rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{month}</div>
-                  <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ffffff', lineHeight: '1' }}>{day}</div>
+                  <div className="text-xs sm:text-sm text-gray-400 uppercase tracking-wide">{month}</div>
+                  <div className="text-2xl sm:text-3xl font-bold text-white leading-none">{day}</div>
                 </div>
 
                 {/* Event Type Badge */}
-                <div style={{ marginBottom: '0.75rem' }}>
-                  <span className="event-type-badge" style={typeStyle}>
+                <div className="mb-2 sm:mb-3">
+                  <span className="event-type-badge text-xs sm:text-sm" style={typeStyle}>
                     {event.type}
                   </span>
                 </div>
 
                 {/* Event Title */}
-                <h3 className="event-card-title">{event.title}</h3>
+                <h3 className="event-card-title text-lg sm:text-xl">{event.title}</h3>
 
                 {/* Event Meta */}
-                <div className="event-card-meta">
+                <div className="event-card-meta text-sm">
                   <div className="event-meta-item">
                     <span>🕐</span>
                     <span>{event.time}</span>
@@ -151,10 +151,10 @@ export default function EventsPage() {
                 </div>
 
                 {/* Description */}
-                <p className="event-card-description">{event.description}</p>
+                <p className="event-card-description text-sm sm:text-base">{event.description}</p>
 
                 {/* RSVP Button */}
-                <button className="btn-animated">
+                <button className="btn-animated w-full sm:w-auto">
                   <span className="btn-text">RSVP Now</span>
                   <span className="btn-ripple"></span>
                 </button>

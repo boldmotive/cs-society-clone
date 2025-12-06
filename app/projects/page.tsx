@@ -80,49 +80,50 @@ export default function ProjectsPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#0a1628' }}>
-        <div style={{ fontSize: '1.25rem', color: '#9ca3af' }}>Loading projects...</div>
+        <div className="text-base sm:text-lg md:text-xl text-gray-400">Loading projects...</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full py-20" style={{ backgroundColor: '#0a1628' }}>
-      <div style={{ maxWidth: '80rem', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '1rem', paddingRight: '1rem' }}>
-        <div style={{ marginBottom: '3rem' }}>
-          <h1 style={{ fontSize: '3rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '1rem' }}>Student Projects</h1>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>
+    <div className="w-full py-12 sm:py-16 md:py-20" style={{ backgroundColor: '#0a1628' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 sm:mb-10 md:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">Student Projects</h1>
+          <p className="text-base sm:text-lg md:text-xl text-gray-400">
             Big or small, every project counts. Check out what our community is building.{' '}
-            <span style={{ color: '#22d3ee', cursor: 'pointer' }}>
+            <span className="text-cyan-400 cursor-pointer hover:text-cyan-300 transition-colors">
               Want to showcase yours? Submit a project.
             </span>
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {projects.map((project) => (
-            <div key={project.id} style={{ backgroundColor: '#0f1d32', border: '1px solid rgba(107, 114, 128, 0.3)', borderRadius: '0.75rem', overflow: 'hidden' }}>
+            <div key={project.id} className="bg-[#0f1d32] border border-gray-600/30 rounded-xl overflow-hidden card-hover">
               {/* Project Image */}
-              <div className="relative h-48" style={{ backgroundColor: '#1a2a42' }}>
+              <div className="relative h-40 sm:h-48 bg-[#1a2a42]">
                 <Image
                   src={project.image_url}
                   alt={project.title}
                   fill
                   className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
 
               {/* Project Details */}
-              <div style={{ padding: '1.5rem' }}>
-                <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginBottom: '0.5rem' }}>By {project.author}</div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.75rem' }}>{project.title}</h3>
-                <p style={{ color: '#d1d5db', marginBottom: '1rem' }}>{project.description}</p>
+              <div className="p-4 sm:p-5 lg:p-6">
+                <div className="text-xs sm:text-sm text-gray-400 mb-1 sm:mb-2">By {project.author}</div>
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3">{project.title}</h3>
+                <p className="text-gray-300 text-sm sm:text-base mb-3 sm:mb-4">{project.description}</p>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2" style={{ marginBottom: '1rem' }}>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                   {project.tags.map((tag, index) => (
                     <span
                       key={index}
-                      style={{ fontSize: '0.75rem', fontWeight: '600', color: '#22d3ee', backgroundColor: 'rgba(6, 182, 212, 0.15)', padding: '0.25rem 0.75rem', borderRadius: '9999px' }}
+                      className="text-xs font-semibold text-cyan-400 bg-cyan-500/15 px-2 sm:px-3 py-1 rounded-full"
                     >
                       #{tag}
                     </span>
@@ -134,7 +135,7 @@ export default function ProjectsPage() {
                   href={project.github_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: 'block', width: '100%', textAlign: 'center', backgroundColor: '#1a2a42', color: '#ffffff', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: '600', textDecoration: 'none', border: '1px solid rgba(107, 114, 128, 0.3)' }}
+                  className="block w-full text-center bg-[#1a2a42] text-white py-2.5 sm:py-3 px-4 rounded-lg font-semibold border border-gray-600/30 hover:bg-[#243650] hover:border-cyan-500/30 transition-all duration-300"
                 >
                   View Code
                 </a>

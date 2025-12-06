@@ -1,9 +1,9 @@
 export default function Footer() {
   return (
-    <footer className="w-full" style={{ backgroundColor: '#060d18', borderTop: '1px solid #1f2937', padding: '2rem 0' }}>
-      <div style={{ maxWidth: '80rem', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '1rem', paddingRight: '1rem' }}>
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+    <footer className="w-full bg-[#060d18] border-t border-gray-800 py-6 sm:py-8 safe-area-bottom">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-gray-500 text-xs sm:text-sm">
             © 2025 CS Society. Built for the future.
           </p>
         </div>

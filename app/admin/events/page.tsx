@@ -70,7 +70,7 @@ export default function AdminEventsPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#0a1628' }}>
-        <div style={{ fontSize: '1.25rem', color: '#9ca3af' }}>Loading...</div>
+        <div className="text-base sm:text-lg md:text-xl text-gray-400">Loading...</div>
       </div>
     );
   }
@@ -80,38 +80,30 @@ export default function AdminEventsPage() {
   }
 
   return (
-    <div className="w-full py-20" style={{ backgroundColor: '#0a1628' }}>
-      <div style={{ maxWidth: '48rem', marginLeft: 'auto', marginRight: 'auto', paddingLeft: '1rem', paddingRight: '1rem' }}>
-        <div className="animate-fade-in-up" style={{ marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem' }}>
+    <div className="w-full py-12 sm:py-16 md:py-20" style={{ backgroundColor: '#0a1628' }}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="animate-fade-in-up mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
             Admin: Create Event
           </h1>
-          <p style={{ color: '#9ca3af' }}>Add a new event to the platform</p>
+          <p className="text-gray-400 text-sm sm:text-base">Add a new event to the platform</p>
         </div>
 
         {message && (
-          <div className="animate-fade-in-up" style={{
-            padding: '1rem',
-            borderRadius: '0.5rem',
-            marginBottom: '1.5rem',
-            backgroundColor: message.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-            border: `1px solid ${message.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-            color: message.type === 'success' ? '#4ade80' : '#ef4444',
-          }}>
+          <div className={`animate-fade-in-up p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 text-sm sm:text-base ${
+            message.type === 'success'
+              ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+              : 'bg-red-500/10 border border-red-500/30 text-red-400'
+          }`}>
             {message.text}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="animate-fade-in-up animation-delay-100" style={{
-          backgroundColor: '#0f1d32',
-          border: '1px solid rgba(107, 114, 128, 0.3)',
-          borderRadius: '1rem',
-          padding: '2rem',
-        }}>
-          <div style={{ display: 'grid', gap: '1.5rem' }}>
+        <form onSubmit={handleSubmit} className="animate-fade-in-up animation-delay-100 bg-[#0f1d32] border border-gray-600/30 rounded-xl p-4 sm:p-6 md:p-8">
+          <div className="grid gap-4 sm:gap-5 md:gap-6">
             {/* Title */}
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem', fontWeight: '500' }}>
+              <label className="block text-gray-300 mb-2 font-medium text-sm sm:text-base">
                 Event Title *
               </label>
               <input
@@ -125,32 +117,32 @@ export default function AdminEventsPage() {
               />
             </div>
 
-            {/* Date and Time Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            {/* Date and Time Row - stacks on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-4">
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem', fontWeight: '500' }}>
+                <label className="block text-gray-300 mb-2 font-medium text-sm sm:text-base">
                   Date *
                 </label>
                 <input type="date" name="date" value={form.date} onChange={handleChange} required className="form-input" />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem', fontWeight: '500' }}>
+                <label className="block text-gray-300 mb-2 font-medium text-sm sm:text-base">
                   Time *
                 </label>
                 <input type="time" name="time" value={form.time} onChange={handleChange} required className="form-input" />
               </div>
             </div>
 
-            {/* Location and Type Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            {/* Location and Type Row - stacks on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-4">
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem', fontWeight: '500' }}>
+                <label className="block text-gray-300 mb-2 font-medium text-sm sm:text-base">
                   Location *
                 </label>
                 <input type="text" name="location" value={form.location} onChange={handleChange} required className="form-input" placeholder="e.g., Room 304 & Zoom" />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem', fontWeight: '500' }}>
+                <label className="block text-gray-300 mb-2 font-medium text-sm sm:text-base">
                   Event Type *
                 </label>
                 <select name="type" value={form.type} onChange={handleChange} required className="form-input">
@@ -161,7 +153,7 @@ export default function AdminEventsPage() {
 
             {/* Description */}
             <div>
-              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem', fontWeight: '500' }}>
+              <label className="block text-gray-300 mb-2 font-medium text-sm sm:text-base">
                 Description *
               </label>
               <textarea
@@ -175,19 +167,19 @@ export default function AdminEventsPage() {
               />
             </div>
 
-            {/* Submit Button */}
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+            {/* Submit Button - full width on mobile */}
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 sm:justify-end mt-2 sm:mt-4">
               <button
                 type="button"
                 onClick={() => setForm(initialFormState)}
-                className="btn-animated-secondary"
+                className="btn-animated-secondary w-full sm:w-auto"
               >
                 Reset
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-animated"
+                className="btn-animated w-full sm:w-auto"
                 style={{ opacity: isSubmitting ? 0.7 : 1 }}
               >
                 <span className="btn-text">{isSubmitting ? 'Creating...' : 'Create Event'}</span>
