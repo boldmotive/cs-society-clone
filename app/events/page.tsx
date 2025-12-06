@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 interface Event {
   id: number;
@@ -23,6 +23,7 @@ export default function EventsPage() {
 
   async function fetchEvents() {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('events')
         .select('*')

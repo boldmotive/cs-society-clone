@@ -36,21 +36,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    let initialFetchDone = false;
 
-    // Listen for auth changes - this handles everything including initial session
+    // Explicitly fetch the initial session to sync with server-set cookies
+    // This is critical after OAuth redirects where the server sets the session cookie
+    async function initializeSession() {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        console.log('Initial session check:', initialSession?.user?.email || 'no session');
+
+        if (initialSession?.user) {
+          setSession(initialSession);
+          setUser(initialSession.user);
+          await fetchProfile(initialSession.user.id);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    // Initialize session immediately
+    initializeSession();
+
+    // Listen for auth changes - this handles subsequent auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!mounted) return;
 
         console.log('Auth state changed:', event, 'User:', newSession?.user?.email);
 
+        // Skip INITIAL_SESSION as we handle it above with getSession()
+        if (event === 'INITIAL_SESSION') {
+          return;
+        }
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
-        // Only fetch profile once per session change
-        if (newSession?.user && !initialFetchDone) {
-          initialFetchDone = true;
+        // Fetch profile on sign in events
+        if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          // Always fetch profile on SIGNED_IN to ensure we have the latest data
           console.log('Fetching profile for user:', newSession.user.id);
           await fetchProfile(newSession.user.id);
         } else if (!newSession?.user) {

@@ -40,7 +40,7 @@ function LoginContent() {
       {/* Mesh gradient overlay */}
       <div className="gradient-mesh" />
 
-      <div className="gradient-content animate-fade-in-up bg-[#0f1d32]/85 backdrop-blur-lg border border-gray-600/30 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 w-full max-w-[400px]">
+      <div className="gradient-content animate-fade-in-up bg-[#0f1d32]/85 backdrop-blur-lg border border-gray-600/30 rounded-xl sm:rounded-2xl p-6 sm:p-8 md:p-10 w-full max-w-[400px]" style={{ zIndex: 10 }}>
         <div className="text-center mb-6 sm:mb-8">
           <div className="w-14 h-14 sm:w-16 sm:h-16 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 text-2xl sm:text-3xl">
             🔐

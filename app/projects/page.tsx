@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 interface Project {
   id: number;
@@ -24,6 +24,7 @@ export default function ProjectsPage() {
 
   async function fetchProjects() {
     try {
+      const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from('projects')
         .select('*')
