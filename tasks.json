@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "content": "Setup Supabase client and environment configuration",
+    "status": "completed"
+  },
+  {
+    "id": "2",
+    "content": "Create layout with navigation and footer",
+    "status": "completed"
+  },
+  {
+    "id": "3",
+    "content": "Build home page with hero section and features",
+    "status": "completed"
+  },
+  {
+    "id": "4",
+    "content": "Build Events page with event listings",
+    "status": "completed"
+  },
+  {
+    "id": "5",
+    "content": "Build Projects page with project cards",
+    "status": "completed"
+  },
+  {
+    "id": "6",
+    "content": "Setup Supabase database schema and seed data",
+    "status": "completed"
+  }
+]
