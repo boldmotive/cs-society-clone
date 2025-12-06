@@ -36,25 +36,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let sessionCheckAttempts = 0;
+    const MAX_SESSION_CHECK_ATTEMPTS = 3;
 
     // Explicitly fetch the initial session to sync with server-set cookies
     // This is critical after OAuth redirects where the server sets the session cookie
     async function initializeSession() {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        sessionCheckAttempts++;
+        console.log(`[AUTH] Initializing session (attempt ${sessionCheckAttempts})...`);
+        
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('[AUTH] Session error:', sessionError);
+          if (mounted) {
+            setIsLoading(false);
+          }
+          return;
+        }
+
         if (!mounted) return;
 
-        console.log('Initial session check:', initialSession?.user?.email || 'no session');
+        console.log('[AUTH] Initial session check:', initialSession?.user?.email || 'no session');
 
         if (initialSession?.user) {
           setSession(initialSession);
           setUser(initialSession.user);
           await fetchProfile(initialSession.user.id);
         } else {
-          setIsLoading(false);
+          // If no session found and we haven't reached max attempts, retry after a short delay
+          // This helps handle cases where cookies are being set asynchronously
+          if (sessionCheckAttempts < MAX_SESSION_CHECK_ATTEMPTS) {
+            console.log('[AUTH] No session found, retrying in 500ms...');
+            setTimeout(() => {
+              if (mounted) initializeSession();
+            }, 500);
+          } else {
+            console.log('[AUTH] No session found after max attempts');
+            setIsLoading(false);
+          }
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('[AUTH] Error getting initial session:', error);
         if (mounted) {
           setIsLoading(false);
         }
@@ -69,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, newSession) => {
         if (!mounted) return;
 
-        console.log('Auth state changed:', event, 'User:', newSession?.user?.email);
+        console.log('[AUTH] State changed:', event, 'User:', newSession?.user?.email || 'none');
 
         // Skip INITIAL_SESSION as we handle it above with getSession()
         if (event === 'INITIAL_SESSION') {

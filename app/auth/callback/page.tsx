@@ -1,81 +1,54 @@
+/**
+ * OAuth Callback Page (Client-Side Fallback)
+ * 
+ * This page serves as a fallback and loading state for the OAuth callback.
+ * The actual OAuth code exchange happens in the server-side route handler
+ * at /app/auth/callback/route.ts which provides more reliable cookie handling
+ * in production environments (especially Vercel).
+ * 
+ * This page will only be shown if:
+ * 1. The server-side redirect hasn't completed yet (brief loading state)
+ * 2. There's an error that needs to be displayed to the user
+ * 3. JavaScript is executing before the redirect completes
+ */
+
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 function CallbackContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
-  const hasNavigated = useRef(false);
 
   useEffect(() => {
-    // Get params directly from window.location to avoid useSearchParams issues
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const next = params.get('next') ?? '/';
-    const oauthError = params.get('error');
-    const errorDescription = params.get('error_description');
+    // Check for error parameters (from server-side redirect)
+    const errorParam = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
 
-    console.log('Auth callback - code:', code ? 'present' : 'missing', 'next:', next);
-
-    if (oauthError) {
-      console.error('OAuth error:', oauthError, errorDescription);
-      setError(`OAuth error: ${oauthError}`);
-      setTimeout(() => router.replace(`/login?error=${encodeURIComponent(oauthError)}`), 2000);
+    if (errorParam) {
+      console.error('[CALLBACK PAGE] Error from server:', errorParam, errorDescription);
+      setError(errorDescription || errorParam);
+      setTimeout(() => {
+        router.replace(`/login?error=${encodeURIComponent(errorParam)}`);
+      }, 3000);
       return;
     }
 
-    if (!code) {
-      console.error('No code provided in callback');
-      setError('No authorization code received');
-      setTimeout(() => router.replace('/login?error=no_code'), 2000);
-      return;
-    }
+    // If no error, the server-side route should have already redirected us
+    // This is just a brief loading state while that happens
+    console.log('[CALLBACK PAGE] Waiting for server-side redirect...');
 
-    const supabase = createSupabaseBrowserClient();
+    // Failsafe: if we're still here after 10 seconds, something went wrong
+    const timeout = setTimeout(() => {
+      console.warn('[CALLBACK PAGE] Server redirect timeout, redirecting to home');
+      router.replace('/');
+    }, 10000);
 
-    // Navigate helper that prevents double navigation
-    // Use window.location.href for full page load to ensure auth state is fresh
-    function navigateTo(path: string) {
-      if (hasNavigated.current) return;
-      hasNavigated.current = true;
-      console.log('Navigating to:', path);
-      window.location.href = path;
-    }
-
-    // Listen for SIGNED_IN event - this fires when session is established
-    // Navigate immediately when this fires, don't wait for the promise
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Callback auth state change:', event, session?.user?.email);
-
-      if (event === 'SIGNED_IN' && session) {
-        console.log('SIGNED_IN detected, navigating to:', next);
-        navigateTo(next);
-      }
-    });
-
-    // Start the code exchange - the promise may hang but onAuthStateChange will fire
-    console.log('Exchanging code for session...');
-    supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
-      if (exchangeError) {
-        console.error('Error exchanging code for session:', exchangeError);
-        setError(`Authentication failed: ${exchangeError.message}`);
-        setTimeout(() => navigateTo('/login?error=auth_callback_error'), 2000);
-      }
-      // If successful, onAuthStateChange will handle navigation
-    }).catch((err) => {
-      console.error('Callback error:', err);
-      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown'}`);
-      setTimeout(() => navigateTo('/login?error=auth_callback_error'), 2000);
-    });
-
-    // Cleanup subscription on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router]);
+    return () => clearTimeout(timeout);
+  }, [router, searchParams]);
 
   return (
     <div className="gradient-bg min-h-screen flex justify-center items-center px-4" style={{ backgroundColor: '#0a1628' }}>
@@ -95,6 +68,7 @@ function CallbackContent() {
           <>
             <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-base sm:text-lg md:text-xl text-gray-400">Completing sign in...</p>
+            <p className="text-sm text-gray-500">Please wait...</p>
           </>
         )}
       </div>

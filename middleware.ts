@@ -10,6 +10,7 @@ export async function middleware(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('[MIDDLEWARE] Missing Supabase credentials');
     return supabaseResponse;
   }
 
@@ -32,12 +33,25 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Refresh session if expired
-  const { data: { user } } = await supabase.auth.getUser();
+  // Get and refresh the session - this is critical for maintaining auth state
+  // Use getSession() instead of getUser() as it also refreshes expired sessions
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError) {
+    console.error('[MIDDLEWARE] Session error:', sessionError);
+  }
+
+  const user = session?.user || null;
+
+  // Log auth state for debugging (only in development)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[MIDDLEWARE]', request.nextUrl.pathname, 'User:', user?.email || 'anonymous');
+  }
 
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
+      console.log('[MIDDLEWARE] Admin route access denied - no user');
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirect', request.nextUrl.pathname);
@@ -45,13 +59,18 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
 
+    if (profileError) {
+      console.error('[MIDDLEWARE] Error fetching profile:', profileError);
+    }
+
     if (!profile || profile.role !== 'admin') {
+      console.log('[MIDDLEWARE] Admin route access denied - not admin');
       const url = request.nextUrl.clone();
       url.pathname = '/';
       return NextResponse.redirect(url);
