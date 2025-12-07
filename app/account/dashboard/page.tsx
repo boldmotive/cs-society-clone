@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { ManageSubscription } from '@/components/ManageSubscription';
 import Link from 'next/link';
 
-export default function AccountPage() {
+export default function DashboardPage() {
   const { user, profile, isSubscribed } = useAuth();
 
   const subscriptionStatus = profile?.subscription_status || 'inactive';

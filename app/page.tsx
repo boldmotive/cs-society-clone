@@ -392,7 +392,9 @@ export default function Home() {
       </section>
 
       {/* Membership Pricing Section */}
-      <PricingSection />
+      <div id="pricing">
+        <PricingSection />
+      </div>
     </div>
   );
 }

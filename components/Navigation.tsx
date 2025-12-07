@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, profile, isAdmin, isLoading, signOut } = useAuth();
+  const { user, profile, isAdmin, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -81,7 +81,7 @@ export default function Navigation() {
 
             {/* Auth Buttons */}
             {isLoading ? (
-              <div className="text-gray-500 text-sm">...</div>
+              <div className="text-gray-500 text-sm">.{" "}.{" "}.</div>
             ) : user ? (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white text-sm">
@@ -102,12 +102,12 @@ export default function Navigation() {
                     user?.email?.[0]?.toUpperCase() || '?'
                   )}
                 </div>
-                <button
-                  onClick={signOut}
-                  className="discord-btn bg-transparent border border-gray-600 text-white px-4 py-2 rounded-lg text-sm"
+                <Link
+                  href="/account/dashboard"
+                  className="discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-2 rounded-lg text-sm"
                 >
-                  Sign Out
-                </button>
+                  Dashboard
+                </Link>
               </div>
             ) : (
               <Link
@@ -176,7 +176,7 @@ export default function Navigation() {
           {isLoading ? (
             <div className="px-4 py-3 text-gray-500 text-sm">Loading...</div>
           ) : user ? (
-            <div className="px-4 py-3 space-y-3">
+            <div className="px-4 py-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white">
                   {profile?.avatar_url ? (
@@ -196,17 +196,14 @@ export default function Navigation() {
                     user?.email?.[0]?.toUpperCase() || '?'
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{profile?.full_name || 'User'}</p>
-                  <p className="text-gray-400 text-sm truncate">{user.email}</p>
-                </div>
+                <Link
+                  href="/account/dashboard"
+                  className="flex-1 text-center discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-3 rounded-lg text-base font-medium"
+                  onClick={closeMobileMenu}
+                >
+                  Dashboard
+                </Link>
               </div>
-              <button
-                onClick={() => { signOut(); closeMobileMenu(); }}
-                className="w-full discord-btn bg-transparent border border-gray-600 text-white px-4 py-3 rounded-lg text-sm"
-              >
-                Sign Out
-              </button>
             </div>
           ) : (
             <div className="px-4 py-3">
