@@ -38,7 +38,7 @@ export default function AccountPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-white">Profile Summary</h2>
             <Link
-              href="/account/profile"
+              href="/profile"
               className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
             >
               Edit Profile →
@@ -99,35 +99,35 @@ export default function AccountPage() {
           <h2 className="text-lg font-semibold text-white mb-4">Quick Links</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Link
-              href="/account/projects"
+              href="/projects"
               className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors"
             >
               <span>💎</span>
               <span>My Projects</span>
             </Link>
             <Link
-              href="/account/events"
+              href="/events"
               className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors"
             >
               <span>📅</span>
               <span>My Events</span>
             </Link>
             <Link
-              href="/account/learning"
+              href="/learning"
               className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors"
             >
               <span>📚</span>
               <span>Learning</span>
             </Link>
             <Link
-              href="/account/store"
+              href="/store"
               className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors"
             >
               <span>🛒</span>
               <span>Store</span>
             </Link>
             <Link
-              href="/account/settings"
+              href="/settings"
               className="flex items-center gap-2 px-4 py-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg text-gray-300 hover:text-white transition-colors"
             >
               <span>⚙️</span>

@@ -34,11 +34,11 @@ export default function Navigation() {
   }, [mobileMenuOpen]);
 
   const navLinks = [
+    { href: '/programs', icon: '📚', label: 'Programs' },
     { href: '/events', icon: '📅', label: 'Events' },
     { href: '/projects', icon: '💎', label: 'Projects' },
-    { href: '/forum', icon: '💬', label: 'Forum' },
-    { href: '/learning', icon: '📚', label: 'Learning' },
-    { href: '/store', icon: '🛒', label: 'Store' },
+    { href: '/faq', icon: 'ℹ️', label: 'FAQ' },
+    { href: '/contact', icon: '📞', label: 'Contact' },
   ];
 
   return (
@@ -103,7 +103,7 @@ export default function Navigation() {
                   )}
                 </div>
                 <Link
-                  href="/account/dashboard"
+                  href="/dashboard"
                   className="discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-2 rounded-lg text-sm"
                 >
                   Dashboard
@@ -197,7 +197,7 @@ export default function Navigation() {
                   )}
                 </div>
                 <Link
-                  href="/account/dashboard"
+                  href="/dashboard"
                   className="flex-1 text-center discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-3 rounded-lg text-base font-medium"
                   onClick={closeMobileMenu}
                 >

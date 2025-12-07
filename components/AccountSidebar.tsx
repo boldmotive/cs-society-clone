@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 const navItems = [
-  { href: '/account/dashboard', icon: '🏠', label: 'Dashboard' },
-  { href: '/account/profile', icon: '👤', label: 'Profile' },
-  { href: '/account/projects', icon: '💎', label: 'Projects' },
-  { href: '/account/events', icon: '📅', label: 'Events' },
-  { href: '/account/learning', icon: '📚', label: 'Learning' },
-  { href: '/account/store', icon: '🛒', label: 'Store' },
-  { href: '/account/settings', icon: '⚙️', label: 'Settings' },
+  { href: '/dashboard', icon: '🏠', label: 'Dashboard' },
+  { href: '/profile', icon: '👤', label: 'Profile' },
+  { href: '/my-projects', icon: '💎', label: 'Projects' },
+  { href: '/community', icon: '📅', label: 'Events' },
+  { href: '/learning', icon: '📚', label: 'Learning' },
+  { href: '/store', icon: '🛒', label: 'Store' },
+  { href: '/settings', icon: '⚙️', label: 'Settings' },
 ];
 
 interface AccountSidebarProps {
@@ -28,8 +28,8 @@ export default function AccountSidebar({ mobileMenuOpen, onCloseMobileMenu }: Ac
   };
 
   const isActive = (href: string) => {
-    if (href === '/account/dashboard') {
-      return pathname === '/account' || pathname === '/account/dashboard';
+    if (href === '/dashboard') {
+      return pathname === '/' || pathname === '/dashboard';
     }
     return pathname === href || pathname?.startsWith(href + '/');
   };

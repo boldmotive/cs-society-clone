@@ -46,7 +46,22 @@ export async function proxy(request: NextRequest) {
     console.log('[PROXY]', request.nextUrl.pathname, 'User:', user?.email || 'anonymous');
   }
 
-  // Protect admin routes
+  // Helper to fetch user profile (role and subscription status)
+  const getUserProfile = async (userId: string) => {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, subscription_status')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error('[PROXY] Error fetching profile:', profileError);
+      return null;
+    }
+    return profile;
+  };
+
+  // Protect admin routes - require admin role
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
       console.log('[PROXY] Admin route access denied - no user');
@@ -56,16 +71,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) {
-      console.error('[PROXY] Error fetching profile:', profileError);
-    }
+    const profile = await getUserProfile(user.id);
 
     if (!profile || profile.role !== 'admin') {
       console.log('[PROXY] Admin route access denied - not admin');
@@ -73,6 +79,38 @@ export async function proxy(request: NextRequest) {
       url.pathname = '/';
       return NextResponse.redirect(url);
     }
+
+    // Admin has access - continue
+    console.log('[PROXY] Admin access granted for:', user.email);
+  }
+
+  // Protect account routes - require authentication
+  // Admins always have full access regardless of subscription status
+  if (request.nextUrl.pathname.startsWith('/account')) {
+    if (!user) {
+      console.log('[PROXY] Account route access denied - no user');
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
+
+    const profile = await getUserProfile(user.id);
+
+    // Admins bypass all subscription checks
+    if (profile?.role === 'admin') {
+      console.log('[PROXY] Admin bypass - full access granted for:', user.email);
+      return supabaseResponse;
+    }
+
+    // For regular users, you can add subscription checks here if needed
+    // Example: if you want to restrict certain account pages to subscribers only
+    // const isSubscribed = profile?.subscription_status === 'active';
+    // if (!isSubscribed && request.nextUrl.pathname.startsWith('/account/premium')) {
+    //   const url = request.nextUrl.clone();
+    //   url.pathname = '/#pricing';
+    //   return NextResponse.redirect(url);
+    // }
   }
 
   return supabaseResponse;
