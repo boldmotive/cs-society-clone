@@ -9,6 +9,7 @@ interface UserProfile {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  bio: string | null;
   role: 'user' | 'admin';
   subscription_status: 'inactive' | 'active' | 'canceled' | 'past_due' | null;
   subscription_plan: 'monthly' | 'annual' | null;
@@ -144,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, avatar_url, role, subscription_status, subscription_plan')
+        .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
         .eq('id', userId)
         .maybeSingle();
 
