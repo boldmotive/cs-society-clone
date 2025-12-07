@@ -10,6 +10,8 @@ interface UserProfile {
   full_name: string | null;
   avatar_url: string | null;
   role: 'user' | 'admin';
+  subscription_status: 'inactive' | 'active' | 'canceled' | 'past_due' | null;
+  subscription_plan: 'monthly' | 'annual' | null;
 }
 
 interface AuthContextType {
@@ -18,6 +20,7 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isSubscribed: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithGitHub: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -141,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, email, full_name, avatar_url, role')
+        .select('id, email, full_name, avatar_url, role, subscription_status, subscription_plan')
         .eq('id', userId)
         .maybeSingle();
 
@@ -221,6 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     isLoading,
     isAdmin: profile?.role === 'admin',
+    isSubscribed: profile?.subscription_status === 'active',
     signInWithGoogle,
     signInWithGitHub,
     signOut,

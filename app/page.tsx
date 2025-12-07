@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PricingSection from "@/components/PricingSection";
 
 export default function Home() {
   return (
@@ -323,11 +324,11 @@ export default function Home() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-[#0a1628] rounded-lg p-4 text-center">
-                  <span className="text-3xl sm:text-4xl font-bold text-cyan-400">50+</span>
+                  <span className="text-3xl sm:text-4xl font-bold text-cyan-400">25+</span>
                   <p className="text-gray-400 text-sm mt-1">Workshops per year</p>
                 </div>
                 <div className="bg-[#0a1628] rounded-lg p-4 text-center">
-                  <span className="text-3xl sm:text-4xl font-bold text-purple-400">4</span>
+                  <span className="text-3xl sm:text-4xl font-bold text-purple-400">2</span>
                   <p className="text-gray-400 text-sm mt-1">Annual hackathons</p>
                 </div>
                 <div className="bg-[#0a1628] rounded-lg p-4 text-center">
@@ -391,133 +392,7 @@ export default function Home() {
       </section>
 
       {/* Membership Pricing Section */}
-      <section className="w-full py-12 sm:py-16 border-t border-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-12">
-            <span className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-sm mb-4">
-              ✦ Simple Pricing
-            </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-              Invest in Your Future
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
-              For less than the cost of a streaming subscription, unlock everything the CS Society has to offer.
-            </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Monthly Plan */}
-            <div className="bg-[#0f1d32]/80 border border-gray-700/50 rounded-2xl p-6 sm:p-8 relative">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">Monthly</h3>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl sm:text-5xl font-bold text-white">$10</span>
-                  <span className="text-gray-400 text-lg">/month</span>
-                </div>
-                <p className="text-gray-400 text-sm mt-2">Flexible month-to-month</p>
-              </div>
-
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  All workshops &amp; events
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Priority RSVP access
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Member-only networking
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Project showcase features
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Discord &amp; mentorship
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Free swag at events
-                </li>
-              </ul>
-
-              <Link
-                href="/signup?plan=monthly"
-                className="block w-full bg-transparent text-white px-6 py-3 rounded-lg font-semibold text-center border border-gray-600 hover:border-cyan-500 transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            {/* Annual Plan */}
-            <div className="bg-gradient-to-br from-[#0f1d32] to-[#1a2a42] border-2 border-cyan-500/50 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
-              {/* Best Value badge */}
-              <div className="absolute top-4 right-4">
-                <span className="px-3 py-1 bg-cyan-500 text-white text-xs font-bold rounded-full">
-                  SAVE 15%
-                </span>
-              </div>
-
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-white mb-2">Annual</h3>
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl sm:text-5xl font-bold text-cyan-400">$102</span>
-                  <span className="text-gray-400 text-lg">/year</span>
-                </div>
-                <p className="text-gray-400 text-sm mt-2">
-                  Just $8.50/mo · <span className="text-cyan-400">Save $18</span>
-                </p>
-              </div>
-
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Everything in Monthly
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Priority RSVP access
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Member-only networking
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Project showcase features
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Resume database access
-                </li>
-                <li className="flex items-center text-gray-300 text-sm">
-                  <span className="text-cyan-400 mr-3">✓</span>
-                  Exclusive annual member swag
-                </li>
-              </ul>
-
-              <Link
-                href="/signup?plan=annual"
-                className="block w-full btn-glow bg-cyan-500 text-white px-6 py-3 rounded-lg font-semibold text-center"
-              >
-                Get Annual Access
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-8 text-center">
-            <p className="text-gray-400 text-sm mb-4">
-              Not ready to commit? Attend one of our free public events first!
-            </p>
-            <Link href="/events" className="text-cyan-400 font-semibold inline-flex items-center gap-1 text-sm hover:underline">
-              Browse upcoming events <span>→</span>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PricingSection />
     </div>
   );
 }
