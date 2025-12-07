@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 
 interface Event {
@@ -95,6 +96,13 @@ export default function EventsPage() {
     }
   }
 
+  const memberBenefits = [
+    { icon: '🎟️', title: 'Priority RSVP', description: 'Get first access to limited-capacity workshops and events' },
+    { icon: '🔒', title: 'Exclusive Events', description: 'Access member-only networking sessions and tech talks' },
+    { icon: '📧', title: 'Early Notifications', description: 'Be the first to know when new events are announced' },
+    { icon: '🎁', title: 'Free Swag', description: 'Members receive exclusive CS Society merchandise at events' },
+  ];
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen" style={{ backgroundColor: '#0a1628' }}>
@@ -104,12 +112,36 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="w-full py-12 sm:py-16 md:py-20" style={{ backgroundColor: '#0a1628' }}>
+    <div className="w-full py-12 sm:py-16 md:py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 sm:mb-10 md:mb-12 animate-fade-in-up">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4">Upcoming Events</h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-400">
-            From hands-on workshops to chill study jams. Come learn, hang out, and meet your future best friends.
+        {/* Hero Section */}
+        <div className="text-center mb-12 sm:mb-16 animate-fade-in-up">
+          <span className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-sm mb-4">
+            ✦ Upcoming Events
+          </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            Learn, Connect, and Grow<br />
+            <span className="text-cyan-400">Together</span>
+          </h1>
+          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
+            From hands-on workshops to chill study jams—our events are where friendships form,
+            skills develop, and opportunities arise. Join us and be part of something special.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/login" className="btn-animated">
+              <span className="btn-text">Sign In to RSVP</span>
+            </Link>
+            <Link href="/about" className="btn-animated-secondary">
+              Learn More About Us
+            </Link>
+          </div>
+        </div>
+
+        {/* Events Section Header */}
+        <div className="mb-8 sm:mb-10 animate-fade-in-up animation-delay-200">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">What&apos;s Coming Up</h2>
+          <p className="text-gray-400">
+            Check out our upcoming events and save your spot. Members get priority access!
           </p>
         </div>
 
@@ -155,13 +187,61 @@ export default function EventsPage() {
                 <p className="event-card-description text-sm sm:text-base">{event.description}</p>
 
                 {/* RSVP Button */}
-                <button className="btn-animated w-full sm:w-auto">
+                <Link href="/login" className="btn-animated w-full sm:w-auto text-center">
                   <span className="btn-text">RSVP Now</span>
                   <span className="btn-ripple"></span>
-                </button>
+                </Link>
               </div>
             );
           })}
+        </div>
+
+        {/* Member Benefits Section */}
+        <div className="mt-16 sm:mt-20 animate-fade-in-up animation-delay-400">
+          <div className="text-center mb-8 sm:mb-10">
+            <span className="inline-block px-4 py-1 rounded-full border border-purple-500/30 text-purple-400 text-sm mb-4">
+              ✦ Member Perks
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+              Why Members Love Our Events
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Join the CS Society to unlock exclusive benefits and get the most out of every event.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {memberBenefits.map((benefit, index) => (
+              <div key={index} className="bg-[#0f1d32]/80 border border-gray-700/50 rounded-xl p-5 text-center card-hover">
+                <div className="w-12 h-12 mx-auto mb-4 bg-[#1a2a42] rounded-lg flex items-center justify-center text-2xl">
+                  {benefit.icon}
+                </div>
+                <h3 className="text-white font-semibold mb-2">{benefit.title}</h3>
+                <p className="text-gray-400 text-sm">{benefit.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom CTA Section */}
+        <div className="mt-16 sm:mt-20 animate-fade-in-up animation-delay-500">
+          <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-xl p-8 sm:p-10 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+              Ready to Join the Fun?
+            </h2>
+            <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+              Create your free account today and start RSVPing to events. Meet fellow students,
+              learn new skills, and become part of our growing community.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/login" className="btn-animated">
+                <span className="btn-text">Create Free Account</span>
+              </Link>
+              <Link href="/contact" className="btn-animated-secondary">
+                Have Questions? Contact Us
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

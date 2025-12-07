@@ -80,7 +80,7 @@ export default function Footer() {
                 <Link href="/partners">Partners</Link>
               </p>
               <p className="text-gray-500 text-xs sm:text-sm hover:text-cyan-400 transition-colors">
-                <Link href="/sponsorship">Sponsorship</Link>
+                <Link href="/sponsors">Sponsorship</Link>
               </p>
               <p className="text-gray-500 text-xs sm:text-sm hover:text-cyan-400 transition-colors">
                 <Link href="/scholarships">Scholarships</Link>

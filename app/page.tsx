@@ -82,8 +82,270 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Get Involved & Partners Section */}
+      {/* Mission Section */}
+      <section className="w-full py-12 sm:py-16 border-t border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-sm mb-4">
+              ✦ Our Mission
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+              Build for You. Build for the Future.
+            </h2>
+            <p className="text-gray-400 max-w-3xl mx-auto text-sm sm:text-base">
+              We exist to empower the next generation of technologists, creators, and problem-solvers
+              through education, community, and hands-on experience.
+            </p>
+          </div>
+          <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-xl p-6 sm:p-8 text-center max-w-4xl mx-auto">
+            <p className="text-lg sm:text-xl text-white font-medium leading-relaxed">
+              &quot;To create a welcoming space where students can discover their passion for technology,
+              develop real-world skills, and build lasting connections that extend beyond graduation.&quot;
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Values Section */}
       <section className="w-full py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">Our Values</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
+              These principles guide everything we do as a community.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <span className="text-2xl mb-3 block">🤝</span>
+              <h3 className="text-lg font-bold text-white mb-2">Inclusivity</h3>
+              <p className="text-gray-400 text-sm">
+                We welcome everyone, regardless of experience level or background. No question is too basic, no project too ambitious.
+              </p>
+            </div>
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <span className="text-2xl mb-3 block">👥</span>
+              <h3 className="text-lg font-bold text-white mb-2">Collaboration</h3>
+              <p className="text-gray-400 text-sm">
+                The best ideas come from working together. We foster partnerships, mentorships, and team projects.
+              </p>
+            </div>
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <span className="text-2xl mb-3 block">🌱</span>
+              <h3 className="text-lg font-bold text-white mb-2">Growth</h3>
+              <p className="text-gray-400 text-sm">
+                We&apos;re committed to continuous learning. Every workshop, event, and project is an opportunity to grow.
+              </p>
+            </div>
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <span className="text-2xl mb-3 block">💡</span>
+              <h3 className="text-lg font-bold text-white mb-2">Innovation</h3>
+              <p className="text-gray-400 text-sm">
+                We encourage creative thinking and experimentation. Failure is just a step toward success.
+              </p>
+            </div>
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <span className="text-2xl mb-3 block">♡</span>
+              <h3 className="text-lg font-bold text-white mb-2">Community</h3>
+              <p className="text-gray-400 text-sm">
+                Beyond code, we&apos;re friends. We celebrate each other&apos;s wins and support each other through challenges.
+              </p>
+            </div>
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <span className="text-2xl mb-3 block">🎯</span>
+              <h3 className="text-lg font-bold text-white mb-2">Impact</h3>
+              <p className="text-gray-400 text-sm">
+                We build with purpose. Our projects and initiatives aim to make a positive difference in our community.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Join Section */}
+      <section className="w-full py-12 sm:py-16 border-t border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+            <div>
+              <span className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-sm mb-4">
+                ✦ Why Join Us
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                Your Journey Starts Here
+              </h2>
+              <p className="text-gray-400 mb-6 text-sm sm:text-base">
+                Whether you&apos;re exploring tech for the first time or ready to level up your skills,
+                the CS Society is your launchpad.
+              </p>
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <span className="text-cyan-400 mr-3 mt-1">✓</span>
+                  <div>
+                    <span className="text-white font-medium">Real-world experience</span>
+                    <p className="text-gray-400 text-sm">Work on projects that matter and build a portfolio that stands out.</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-cyan-400 mr-3 mt-1">✓</span>
+                  <div>
+                    <span className="text-white font-medium">Industry connections</span>
+                    <p className="text-gray-400 text-sm">Network with professionals, alumni, and recruiters from top companies.</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-cyan-400 mr-3 mt-1">✓</span>
+                  <div>
+                    <span className="text-white font-medium">Lifelong friendships</span>
+                    <p className="text-gray-400 text-sm">Meet like-minded people who share your passion for technology.</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-cyan-400 mr-3 mt-1">✓</span>
+                  <div>
+                    <span className="text-white font-medium">All-inclusive access</span>
+                    <p className="text-gray-400 text-sm">One flat fee unlocks every workshop, event, and resource we offer.</p>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-[#0f1d32]/80 border border-gray-700/50 rounded-xl p-6 sm:p-8">
+              <h3 className="text-xl font-bold text-white mb-4">What Our Members Say</h3>
+              <div className="space-y-4">
+                <blockquote className="border-l-2 border-cyan-500 pl-4">
+                  <p className="text-gray-300 text-sm italic mb-2">
+                    &quot;I came in knowing nothing about coding. Now I&apos;m interning at a tech company. The mentorship here changed my life.&quot;
+                  </p>
+                  <cite className="text-cyan-400 text-sm">— Jamie, Class of &apos;25</cite>
+                </blockquote>
+                <blockquote className="border-l-2 border-purple-500 pl-4">
+                  <p className="text-gray-300 text-sm italic mb-2">
+                    &quot;The hackathons pushed me to build things I never thought possible. Plus, I made some of my best friends here.&quot;
+                  </p>
+                  <cite className="text-purple-400 text-sm">— Alex, Class of &apos;24</cite>
+                </blockquote>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Learn by Building Section */}
+      <section className="w-full py-12 sm:py-16 border-t border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-sm mb-4">
+              ✦ Learn by Doing
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+              Build Real Projects. Grow Real Skills.
+            </h2>
+            <p className="text-gray-400 max-w-3xl mx-auto text-sm sm:text-base">
+              The best way to learn is by doing. Through hands-on projects, pair programming, and collaborative hackathons,
+              you&apos;ll gain the practical experience that sets you apart.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+            {/* Project Building */}
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-2xl">🛠️</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Project Building</h3>
+              <p className="text-gray-400 text-sm">
+                Turn ideas into reality. Build portfolio-worthy projects with guidance from mentors and peers who&apos;ve been there.
+              </p>
+            </div>
+
+            {/* Pair Programming */}
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-2xl">👩‍💻</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Pair Programming</h3>
+              <p className="text-gray-400 text-sm">
+                Two minds are better than one. Learn faster, catch bugs sooner, and pick up best practices by coding alongside others.
+              </p>
+            </div>
+
+            {/* Hackathons */}
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-2xl">🚀</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Hackathon Collabs</h3>
+              <p className="text-gray-400 text-sm">
+                48 hours to build something amazing. Experience the thrill of rapid prototyping, teamwork under pressure, and creative problem-solving.
+              </p>
+            </div>
+
+            {/* Networking */}
+            <div className="card-hover bg-[#0f1d32]/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-5 sm:p-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-500/5 rounded-lg flex items-center justify-center mb-4">
+                <span className="text-2xl">🌐</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Networking</h3>
+              <p className="text-gray-400 text-sm">
+                Connect with industry professionals, alumni mentors, and fellow students. Your next opportunity could be one conversation away.
+              </p>
+            </div>
+          </div>
+
+          {/* Skills & Growth Highlight */}
+          <div className="bg-gradient-to-r from-[#0f1d32] to-[#1a2a42] border border-gray-700/50 rounded-xl p-6 sm:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">
+                  From Classroom to Career-Ready
+                </h3>
+                <p className="text-gray-400 mb-4 text-sm sm:text-base">
+                  Academic knowledge is just the beginning. Our hands-on programs bridge the gap between
+                  what you learn in class and what employers actually want.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-center text-gray-300 text-sm">
+                    <span className="text-cyan-400 mr-2">→</span>
+                    Git workflows &amp; collaborative coding practices
+                  </li>
+                  <li className="flex items-center text-gray-300 text-sm">
+                    <span className="text-cyan-400 mr-2">→</span>
+                    Code reviews &amp; constructive feedback
+                  </li>
+                  <li className="flex items-center text-gray-300 text-sm">
+                    <span className="text-cyan-400 mr-2">→</span>
+                    Agile methodologies &amp; project management
+                  </li>
+                  <li className="flex items-center text-gray-300 text-sm">
+                    <span className="text-cyan-400 mr-2">→</span>
+                    Technical communication &amp; documentation
+                  </li>
+                </ul>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#0a1628] rounded-lg p-4 text-center">
+                  <span className="text-3xl sm:text-4xl font-bold text-cyan-400">50+</span>
+                  <p className="text-gray-400 text-sm mt-1">Workshops per year</p>
+                </div>
+                <div className="bg-[#0a1628] rounded-lg p-4 text-center">
+                  <span className="text-3xl sm:text-4xl font-bold text-purple-400">4</span>
+                  <p className="text-gray-400 text-sm mt-1">Annual hackathons</p>
+                </div>
+                <div className="bg-[#0a1628] rounded-lg p-4 text-center">
+                  <span className="text-3xl sm:text-4xl font-bold text-orange-400">100+</span>
+                  <p className="text-gray-400 text-sm mt-1">Projects launched</p>
+                </div>
+                <div className="bg-[#0a1628] rounded-lg p-4 text-center">
+                  <span className="text-3xl sm:text-4xl font-bold text-green-400">85%</span>
+                  <p className="text-gray-400 text-sm mt-1">Job placement rate</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Get Involved & Partners Section */}
+      <section className="w-full py-12 sm:py-16 border-t border-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {/* Get Involved */}
@@ -124,6 +386,135 @@ export default function Home() {
                 <div className="partner-hover bg-[#1a2a42] border border-gray-600/30 rounded-lg h-10 sm:h-12"></div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Membership Pricing Section */}
+      <section className="w-full py-12 sm:py-16 border-t border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 text-cyan-400 text-sm mb-4">
+              ✦ Simple Pricing
+            </span>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+              Invest in Your Future
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">
+              For less than the cost of a streaming subscription, unlock everything the CS Society has to offer.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Monthly Plan */}
+            <div className="bg-[#0f1d32]/80 border border-gray-700/50 rounded-2xl p-6 sm:p-8 relative">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">Monthly</h3>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl sm:text-5xl font-bold text-white">$10</span>
+                  <span className="text-gray-400 text-lg">/month</span>
+                </div>
+                <p className="text-gray-400 text-sm mt-2">Flexible month-to-month</p>
+              </div>
+
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  All workshops &amp; events
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Priority RSVP access
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Member-only networking
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Project showcase features
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Discord &amp; mentorship
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Free swag at events
+                </li>
+              </ul>
+
+              <Link
+                href="/signup?plan=monthly"
+                className="block w-full bg-transparent text-white px-6 py-3 rounded-lg font-semibold text-center border border-gray-600 hover:border-cyan-500 transition-colors"
+              >
+                Get Started
+              </Link>
+            </div>
+
+            {/* Annual Plan */}
+            <div className="bg-gradient-to-br from-[#0f1d32] to-[#1a2a42] border-2 border-cyan-500/50 rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+              {/* Best Value badge */}
+              <div className="absolute top-4 right-4">
+                <span className="px-3 py-1 bg-cyan-500 text-white text-xs font-bold rounded-full">
+                  SAVE 15%
+                </span>
+              </div>
+
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">Annual</h3>
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl sm:text-5xl font-bold text-cyan-400">$102</span>
+                  <span className="text-gray-400 text-lg">/year</span>
+                </div>
+                <p className="text-gray-400 text-sm mt-2">
+                  Just $8.50/mo · <span className="text-cyan-400">Save $18</span>
+                </p>
+              </div>
+
+              <ul className="space-y-3 mb-6">
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Everything in Monthly
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Priority RSVP access
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Member-only networking
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Project showcase features
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Resume database access
+                </li>
+                <li className="flex items-center text-gray-300 text-sm">
+                  <span className="text-cyan-400 mr-3">✓</span>
+                  Exclusive annual member swag
+                </li>
+              </ul>
+
+              <Link
+                href="/signup?plan=annual"
+                className="block w-full btn-glow bg-cyan-500 text-white px-6 py-3 rounded-lg font-semibold text-center"
+              >
+                Get Annual Access
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-400 text-sm mb-4">
+              Not ready to commit? Attend one of our free public events first!
+            </p>
+            <Link href="/events" className="text-cyan-400 font-semibold inline-flex items-center gap-1 text-sm hover:underline">
+              Browse upcoming events <span>→</span>
+            </Link>
           </div>
         </div>
       </section>
