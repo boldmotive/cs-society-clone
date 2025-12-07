@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
@@ -53,10 +54,13 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="logo-hover flex items-center gap-2" onClick={closeMobileMenu}>
-            <div className="logo-circle w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center" style={{ transition: 'box-shadow 0.3s ease' }}>
-              <span className="text-white text-sm font-bold">CS</span>
-            </div>
-            <span className="text-white font-semibold">CS Society</span>
+            <Image
+              src="/images/computer-science-society-logo.png"
+              alt="Computer Science Society Logo"
+              width={48}
+              height={48}
+            />
+            <span className="text-white font-semibold">Computer Science Society</span>
             <span className="text-gray-500 text-xs hidden sm:inline">EST. 2024</span>
           </Link>
 
