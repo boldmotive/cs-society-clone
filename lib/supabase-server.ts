@@ -4,6 +4,15 @@ import { cookies } from 'next/headers';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
+// Production-ready cookie options
+// Note: In server components, we can't easily detect HTTPS, so we use NODE_ENV
+const isProduction = process.env.NODE_ENV === 'production';
+const defaultCookieOptions = {
+  secure: isProduction,
+  sameSite: 'lax' as const,
+  path: '/',
+};
+
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
@@ -15,7 +24,12 @@ export async function createSupabaseServerClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, {
+              ...defaultCookieOptions,
+              ...options,
+              // Ensure secure is true in production
+              secure: isProduction ? true : (options?.secure ?? false),
+            })
           );
         } catch {
           // This can happen when calling from a Server Component

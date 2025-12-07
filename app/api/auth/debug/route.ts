@@ -3,14 +3,14 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * Debug endpoint to verify authentication state
- * 
+ *
  * This endpoint helps troubleshoot auth issues by:
  * 1. Checking server-side session
  * 2. Verifying cookies
  * 3. Testing database connection
- * 
+ *
  * Access: GET /api/auth/debug
- * 
+ *
  * SECURITY: Remove or protect this endpoint before production!
  */
 export async function GET(request: NextRequest) {
@@ -24,6 +24,16 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 
+  // Determine if we're in production (HTTPS)
+  const isProduction = request.nextUrl.protocol === 'https:';
+
+  // Production-ready cookie options
+  const cookieOptions = {
+    secure: isProduction,
+    sameSite: 'lax' as const,
+    path: '/',
+  };
+
   let response = NextResponse.next();
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -33,7 +43,11 @@ export async function GET(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          response.cookies.set(name, value, options);
+          response.cookies.set(name, value, {
+            ...cookieOptions,
+            ...options,
+            secure: isProduction ? true : (options?.secure ?? false),
+          });
         });
       },
     },
@@ -71,6 +85,13 @@ export async function GET(request: NextRequest) {
     const debugInfo = {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
+      isProduction,
+      protocol: request.nextUrl.protocol,
+      cookieSettings: {
+        secure: cookieOptions.secure,
+        sameSite: cookieOptions.sameSite,
+        path: cookieOptions.path,
+      },
       supabaseConfigured: true,
       session: {
         exists: !!session,

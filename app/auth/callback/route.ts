@@ -6,18 +6,22 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
   const next = requestUrl.searchParams.get('next') ?? '/';
   const origin = requestUrl.origin;
-  
+
+  // Determine if we're in production (HTTPS)
+  const isProduction = origin.startsWith('https://');
+
   console.log('[AUTH CALLBACK] Processing OAuth callback', {
     hasCode: !!code,
     next,
     origin,
+    isProduction,
     timestamp: new Date().toISOString(),
   });
 
   // Handle OAuth errors
   const error = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
-  
+
   if (error) {
     console.error('[AUTH CALLBACK] OAuth error:', error, errorDescription);
     return NextResponse.redirect(
@@ -36,16 +40,30 @@ export async function GET(request: NextRequest) {
 
   let response = NextResponse.redirect(`${origin}${next}`);
 
+  // Production-ready cookie options
+  const cookieOptions = {
+    secure: isProduction, // Only send cookies over HTTPS in production
+    sameSite: 'lax' as const, // Required for OAuth redirects to work
+    path: '/',
+    // httpOnly is handled by Supabase - auth tokens should be httpOnly
+  };
+
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        // Set cookies on both the request and response
+        // Set cookies on both the request and response with production-ready options
         cookiesToSet.forEach(({ name, value, options }) => {
           request.cookies.set(name, value);
-          response.cookies.set(name, value, options);
+          // Merge default cookie options with any options from Supabase
+          response.cookies.set(name, value, {
+            ...cookieOptions,
+            ...options,
+            // Ensure secure is true in production regardless of what Supabase sends
+            secure: isProduction ? true : (options?.secure ?? false),
+          });
         });
       },
     },

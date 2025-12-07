@@ -14,6 +14,16 @@ export async function proxy(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Determine if we're in production (HTTPS)
+  const isProduction = request.nextUrl.protocol === 'https:';
+
+  // Production-ready cookie options
+  const cookieOptions = {
+    secure: isProduction,
+    sameSite: 'lax' as const,
+    path: '/',
+  };
+
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -27,7 +37,12 @@ export async function proxy(request: NextRequest) {
           request,
         });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
+          supabaseResponse.cookies.set(name, value, {
+            ...cookieOptions,
+            ...options,
+            // Ensure secure is true in production
+            secure: isProduction ? true : (options?.secure ?? false),
+          })
         );
       },
     },
