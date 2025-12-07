@@ -37,7 +37,8 @@ export async function proxy(request: NextRequest) {
   // This is more secure than getSession() which reads directly from cookies
   const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-  if (userError) {
+  // Only log unexpected auth errors, not "AuthSessionMissingError" which is expected for anonymous visitors
+  if (userError && userError.name !== 'AuthSessionMissingError') {
     console.error('[PROXY] Auth error:', userError);
   }
 
