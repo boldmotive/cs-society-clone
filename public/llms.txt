@@ -1,0 +1,31 @@
+# Computer Science Society
+
+> A welcoming space where students can discover their passion for technology, develop real-world skills, and build lasting connections that extend beyond graduation.
+
+## Key notes
+- Canonical domain: https://www.computersciencesociety.com
+- Student-led tech community; independent of academic departments
+- Press & corrections: https://www.computersciencesociety.com/contact
+
+## Sitemaps
+- https://www.computersciencesociety.com/sitemap.xml
+
+## Key Pages
+- https://www.computersciencesociety.com/ — Home and overview
+- https://www.computersciencesociety.com/contact — General inquiries
+- https://www.computersciencesociety.com/memberships — Membership plans and dues
+- https://www.computersciencesociety.com/programs — Programs overview
+- https://www.computersciencesociety.com/events — Event calendar
+
+## Policies
+- https://www.computersciencesociety.com/terms — Terms of service
+- https://www.computersciencesociety.com/privacy — Privacy policy
+
+## Reference Content
+- None provided
+
+## Markdown versions
+- None provided
+
+## Optional
+- https://www.computersciencesociety.com/media-kit — Media kit and logos

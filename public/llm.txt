@@ -1,0 +1,27 @@
+# Apache (.htaccess)
+Redirect 301 /llm.txt /llms.txt
+
+# Nginx
+location = /llm.txt { return 301 /llms.txt; }
+
+# Cloudflare Worker (serve /llms.txt and 301 /llm.txt)
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (url.pathname === "/llm.txt") {
+      return Response.redirect(url.origin + "/llms.txt", 301);
+    }
+    if (url.pathname === "/llms.txt") {
+      // Optionally serve a cached copy; otherwise let origin handle it
+      return fetch(url.origin + "/llms.txt");
+    }
+    return fetch(request);
+  }
+};
+
+# Netlify (_redirects)
+# Place in your site's /_redirects file
+/llm.txt /llms.txt 301
+
+# Generic CMS plugin
+# Add a single 301 redirect rule from /llm.txt to /llms.txt
