@@ -80,9 +80,7 @@ export default function Navigation() {
             )}
 
             {/* Auth Buttons */}
-            {isLoading ? (
-              <div className="text-gray-500 text-sm">.{" "}.{" "}.</div>
-            ) : user ? (
+            {user ? (
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white text-sm">
                   {profile?.avatar_url ? (
@@ -109,6 +107,8 @@ export default function Navigation() {
                   Dashboard
                 </Link>
               </div>
+            ) : isLoading ? (
+              <div className="text-gray-500 text-sm">.{" "}.{" "}.</div>
             ) : (
               <Link
                 href="/login"
@@ -173,9 +173,7 @@ export default function Navigation() {
           <div className="border-t border-gray-700 my-3" />
 
           {/* Auth Section */}
-          {isLoading ? (
-            <div className="px-4 py-3 text-gray-500 text-sm">Loading...</div>
-          ) : user ? (
+          {user ? (
             <div className="px-4 py-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white">
@@ -205,6 +203,8 @@ export default function Navigation() {
                 </Link>
               </div>
             </div>
+          ) : isLoading ? (
+            <div className="px-4 py-3 text-gray-500 text-sm">Loading...</div>
           ) : (
             <div className="px-4 py-3">
               <Link

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from './supabase';
 
@@ -38,6 +38,91 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchProfile = useCallback(async (userId: string, mounted: boolean) => {
+    console.log('fetchProfile called with userId:', userId);
+
+    try {
+      // First verify we have a valid session
+      const { data: { session }, error: sessionCheckError } = await supabase.auth.getSession();
+      console.log('Current session:', session ? `exists (user: ${session.user.email})` : 'null', 'Error:', sessionCheckError);
+
+      if (!session) {
+        console.warn('No session found, skipping profile fetch');
+        if (mounted) {
+          setProfile(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      console.log('Session verified, querying profiles table...');
+
+      // Query profiles table with explicit error handling
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
+        .eq('id', userId)
+        .maybeSingle();
+
+      console.log('Profile query completed:', { 
+        dataExists: !!data, 
+        error: error ? `${error.code}: ${error.message}` : null,
+        userId 
+      });
+
+      if (!mounted) return;
+
+      if (error) {
+        console.error('Error fetching profile from Supabase:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+        setProfile(null);
+      } else if (data) {
+        console.log('Profile fetched successfully:', {
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          hasAvatar: !!data.avatar_url,
+        });
+        setProfile(data as UserProfile);
+      } else {
+        console.log('No profile data found for user - profile may not exist yet');
+        // Create a minimal profile from the user data if profiles table entry doesn't exist
+        if (session.user) {
+          const minimalProfile: UserProfile = {
+            id: session.user.id,
+            email: session.user.email || null,
+            full_name: session.user.user_metadata?.full_name || null,
+            avatar_url: session.user.user_metadata?.avatar_url || null,
+            bio: null,
+            role: 'user',
+            subscription_status: null,
+            subscription_plan: null,
+          };
+          console.log('Created minimal profile from user metadata:', minimalProfile);
+          setProfile(minimalProfile);
+        } else {
+          setProfile(null);
+        }
+      }
+    } catch (err: unknown) {
+      if (!mounted) return;
+      console.error('Error in fetchProfile:', {
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      setProfile(null);
+    } finally {
+      if (mounted) {
+        console.log('Profile fetch complete, setting isLoading to false');
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     let sessionCheckAttempts = 0;
@@ -68,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (initialSession?.user) {
           setSession(initialSession);
           setUser(initialSession.user);
-          await fetchProfile(initialSession.user.id);
+          await fetchProfile(initialSession.user.id, mounted);
         } else {
           // If no session found and we haven't reached max attempts, retry after a short delay
           // This helps handle cases where cookies are being set asynchronously in Vercel/production
@@ -112,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
           // Always fetch profile on SIGNED_IN to ensure we have the latest data
           console.log('Fetching profile for user:', newSession.user.id);
-          await fetchProfile(newSession.user.id);
+          await fetchProfile(newSession.user.id, mounted);
         } else if (!newSession?.user) {
           console.log('No user in session, clearing profile');
           setProfile(null);
@@ -125,68 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-  async function fetchProfile(userId: string) {
-    console.log('fetchProfile called with userId:', userId);
-
-    // Create a timeout promise that rejects after 30 seconds
-    // This allows for network latency in production environments
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Profile fetch timeout after 30s'));
-      }, 30000);
-    });
-
-    try {
-      // First verify we have a valid session
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session:', session ? 'exists' : 'null');
-
-      if (!session) {
-        console.warn('No session found, skipping profile fetch');
-        setProfile(null);
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Starting Supabase query with auth token...');
-
-      const { data, error } = await Promise.race([
-        supabase
-          .from('profiles')
-          .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
-          .eq('id', userId)
-          .maybeSingle(),
-        timeoutPromise,
-      ]);
-
-      console.log('Supabase query completed. Data:', data, 'Error:', error);
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        setProfile(null);
-      } else if (data) {
-        console.log('Profile fetched successfully:', data);
-        setProfile(data as UserProfile);
-      } else {
-        console.log('No profile found for user');
-        setProfile(null);
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.warn('Profile fetch aborted (timeout)');
-      } else if (err instanceof Error && err.message.includes('timeout')) {
-        console.warn('Profile fetch timed out after 30s. This may indicate a slow network connection or Supabase latency.');
-      } else {
-        console.error('Error fetching profile:', err);
-      }
-      setProfile(null);
-    } finally {
-      console.log('Setting isLoading to false');
-      setIsLoading(false);
-    }
-  }
+  }, [fetchProfile]);
 
   async function signInWithGoogle() {
     const { error } = await supabase.auth.signInWithOAuth({
