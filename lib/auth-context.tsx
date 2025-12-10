@@ -38,31 +38,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (userId: string, mounted: boolean) => {
+  const fetchProfile = useCallback(async (userId: string, isMounted: boolean) => {
     console.log('fetchProfile called with userId:', userId);
 
+    // Create a timeout promise that rejects after 5 seconds
+    // This is fast enough for normal queries but prevents hanging
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Profile fetch timeout after 5s'));
+      }, 5000);
+    });
+
     try {
-      // First verify we have a valid session
-      const { data: { session }, error: sessionCheckError } = await supabase.auth.getSession();
-      console.log('Current session:', session ? `exists (user: ${session.user.email})` : 'null', 'Error:', sessionCheckError);
+      console.log('Querying profiles table...');
 
-      if (!session) {
-        console.warn('No session found, skipping profile fetch');
-        if (mounted) {
-          setProfile(null);
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      console.log('Session verified, querying profiles table...');
-
-      // Query profiles table with explicit error handling
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
-        .eq('id', userId)
-        .maybeSingle();
+      // Query profiles table with explicit error handling and timeout protection
+      // Skip redundant getSession() call since caller already verified authentication
+      const { data, error } = await Promise.race([
+        supabase
+          .from('profiles')
+          .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
+          .eq('id', userId)
+          .maybeSingle(),
+        timeoutPromise,
+      ]);
 
       console.log('Profile query completed:', { 
         dataExists: !!data, 
@@ -70,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userId 
       });
 
-      if (!mounted) return;
+      if (!isMounted) return;
 
       if (error) {
         console.error('Error fetching profile from Supabase:', {
@@ -91,32 +90,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         console.log('No profile data found for user - profile may not exist yet');
         // Create a minimal profile from the user data if profiles table entry doesn't exist
-        if (session.user) {
-          const minimalProfile: UserProfile = {
-            id: session.user.id,
-            email: session.user.email || null,
-            full_name: session.user.user_metadata?.full_name || null,
-            avatar_url: session.user.user_metadata?.avatar_url || null,
-            bio: null,
-            role: 'user',
-            subscription_status: null,
-            subscription_plan: null,
-          };
-          console.log('Created minimal profile from user metadata:', minimalProfile);
-          setProfile(minimalProfile);
-        } else {
-          setProfile(null);
-        }
+        setProfile(null);
       }
     } catch (err: unknown) {
-      if (!mounted) return;
-      console.error('Error in fetchProfile:', {
-        error: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-      });
+      if (!isMounted) return;
+      if (err instanceof Error && err.message.includes('timeout')) {
+        console.warn('Profile fetch timed out after 5s. This may indicate a slow network connection or Supabase latency.');
+      } else {
+        console.error('Error in fetchProfile:', {
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        });
+      }
       setProfile(null);
     } finally {
-      if (mounted) {
+      if (isMounted) {
         console.log('Profile fetch complete, setting isLoading to false');
         setIsLoading(false);
       }
