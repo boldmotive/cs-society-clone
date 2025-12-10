@@ -41,6 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = useCallback(async (userId: string, mounted: boolean) => {
     console.log('fetchProfile called with userId:', userId);
 
+    // Create a timeout promise that rejects after 20 seconds
+    // This accounts for slow networks and Supabase latency
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Profile fetch timeout after 20s'));
+      }, 20000);
+    });
+
     try {
       // First verify we have a valid session
       const { data: { session }, error: sessionCheckError } = await supabase.auth.getSession();
@@ -57,12 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('Session verified, querying profiles table...');
 
-      // Query profiles table with explicit error handling
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
-        .eq('id', userId)
-        .maybeSingle();
+      // Query profiles table with explicit error handling and timeout protection
+      const { data, error } = await Promise.race([
+        supabase
+          .from('profiles')
+          .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
+          .eq('id', userId)
+          .maybeSingle(),
+        timeoutPromise,
+      ]);
 
       console.log('Profile query completed:', { 
         dataExists: !!data, 
@@ -110,10 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err: unknown) {
       if (!mounted) return;
-      console.error('Error in fetchProfile:', {
-        error: err instanceof Error ? err.message : String(err),
-        stack: err instanceof Error ? err.stack : undefined,
-      });
+      if (err instanceof Error && err.message.includes('timeout')) {
+        console.warn('Profile fetch timed out after 20s. This may indicate a slow network connection or Supabase latency.');
+      } else {
+        console.error('Error in fetchProfile:', {
+          error: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : undefined,
+        });
+      }
       setProfile(null);
     } finally {
       if (mounted) {
