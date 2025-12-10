@@ -12,6 +12,14 @@ function getCookieOptions() {
   // Check if we're in a browser environment and if we're using HTTPS
   const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
   
+  if (typeof window !== 'undefined') {
+    console.log('[SUPABASE] Cookie config:', { 
+      isSecure, 
+      protocol: window.location.protocol,
+      host: window.location.host 
+    });
+  }
+  
   return {
     // In production (HTTPS), cookies must be secure
     // In development (HTTP), secure cookies won't work
@@ -34,6 +42,7 @@ export function createSupabaseBrowserClient(): SupabaseClient {
 
   // Client-side: use singleton
   if (!browserClient) {
+    console.log('[SUPABASE] Creating new browser client instance');
     browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       cookieOptions: getCookieOptions(),
     });
