@@ -7,30 +7,35 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholde
 // Single browser client instance - created once and reused
 let browserClient: SupabaseClient | null = null;
 
-// Cookie options for production - ensures cookies work correctly over HTTPS
-const cookieOptions = {
-  // In production (HTTPS), cookies must be secure
-  // In development (HTTP), secure cookies won't work
-  secure: typeof window !== 'undefined' && window.location.protocol === 'https:',
-  // sameSite: 'lax' allows cookies to be sent on navigation from external sites
-  // This is important for OAuth redirects
-  sameSite: 'lax' as const,
-  // Path should be root to ensure cookies are sent with all requests
-  path: '/',
-};
+// Helper function to get cookie options - computed at runtime to ensure correct values
+function getCookieOptions() {
+  // Check if we're in a browser environment and if we're using HTTPS
+  const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  
+  return {
+    // In production (HTTPS), cookies must be secure
+    // In development (HTTP), secure cookies won't work
+    secure: isSecure,
+    // sameSite: 'lax' allows cookies to be sent on navigation from external sites
+    // This is important for OAuth redirects
+    sameSite: 'lax' as const,
+    // Path should be root to ensure cookies are sent with all requests
+    path: '/',
+  };
+}
 
 export function createSupabaseBrowserClient(): SupabaseClient {
   if (typeof window === 'undefined') {
     // Server-side: create a new client (won't persist)
     return createBrowserClient(supabaseUrl, supabaseAnonKey, {
-      cookieOptions,
+      cookieOptions: getCookieOptions(),
     });
   }
 
   // Client-side: use singleton
   if (!browserClient) {
     browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-      cookieOptions,
+      cookieOptions: getCookieOptions(),
     });
   }
   return browserClient;
@@ -39,4 +44,4 @@ export function createSupabaseBrowserClient(): SupabaseClient {
 // Legacy export for backward compatibility
 export const supabase = typeof window !== 'undefined'
   ? createSupabaseBrowserClient()
-  : createBrowserClient(supabaseUrl, supabaseAnonKey, { cookieOptions });
+  : createBrowserClient(supabaseUrl, supabaseAnonKey, { cookieOptions: getCookieOptions() });
