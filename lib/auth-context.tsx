@@ -41,14 +41,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
     let sessionCheckAttempts = 0;
-    const MAX_SESSION_CHECK_ATTEMPTS = 3;
+    const MAX_SESSION_CHECK_ATTEMPTS = 5;
+    const RETRY_DELAY_MS = 300;
 
     // Explicitly fetch the initial session to sync with server-set cookies
     // This is critical after OAuth redirects where the server sets the session cookie
     async function initializeSession() {
       try {
         sessionCheckAttempts++;
-        console.log(`[AUTH] Initializing session (attempt ${sessionCheckAttempts})...`);
+        console.log(`[AUTH] Initializing session (attempt ${sessionCheckAttempts}/${MAX_SESSION_CHECK_ATTEMPTS})...`);
         
         const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
         
@@ -70,12 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fetchProfile(initialSession.user.id);
         } else {
           // If no session found and we haven't reached max attempts, retry after a short delay
-          // This helps handle cases where cookies are being set asynchronously
+          // This helps handle cases where cookies are being set asynchronously in Vercel/production
           if (sessionCheckAttempts < MAX_SESSION_CHECK_ATTEMPTS) {
-            console.log('[AUTH] No session found, retrying in 500ms...');
+            console.log(`[AUTH] No session found, retrying in ${RETRY_DELAY_MS}ms...`);
             setTimeout(() => {
               if (mounted) initializeSession();
-            }, 500);
+            }, RETRY_DELAY_MS);
           } else {
             console.log('[AUTH] No session found after max attempts');
             setIsLoading(false);
@@ -129,6 +130,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string) {
     console.log('fetchProfile called with userId:', userId);
 
+    // Create a timeout promise that rejects after 10 seconds
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Profile fetch timeout after 10s'));
+      }, 10000);
+    });
+
     try {
       // First verify we have a valid session
       const { data: { session } } = await supabase.auth.getSession();
@@ -143,11 +151,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('Starting Supabase query with auth token...');
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
-        .eq('id', userId)
-        .maybeSingle();
+      const { data, error } = await Promise.race([
+        supabase
+          .from('profiles')
+          .select('id, email, full_name, avatar_url, bio, role, subscription_status, subscription_plan')
+          .eq('id', userId)
+          .maybeSingle(),
+        timeoutPromise,
+      ]);
 
       console.log('Supabase query completed. Data:', data, 'Error:', error);
 
@@ -164,6 +175,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') {
         console.warn('Profile fetch aborted (timeout)');
+      } else if (err instanceof Error && err.message.includes('timeout')) {
+        console.warn('Profile fetch timed out:', err.message);
       } else {
         console.error('Error fetching profile:', err);
       }

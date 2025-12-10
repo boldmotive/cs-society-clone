@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -10,7 +10,7 @@ export async function proxy(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('[PROXY] Missing Supabase credentials');
+    console.warn('[MIDDLEWARE] Missing Supabase credentials');
     return supabaseResponse;
   }
 
@@ -48,19 +48,22 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // Get and authenticate the user by contacting Supabase Auth server
-  // This is more secure than getSession() which reads directly from cookies
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  // Refresh session if it exists - this ensures expired sessions are refreshed
+  // Using getSession() instead of getUser() allows session refresh with new tokens
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
   // Only log unexpected auth errors, not "AuthSessionMissingError" which is expected for anonymous visitors
-  if (userError && userError.name !== 'AuthSessionMissingError') {
-    console.error('[PROXY] Auth error:', userError);
+  if (sessionError && sessionError.name !== 'AuthSessionMissingError') {
+    console.error('[MIDDLEWARE] Session error:', sessionError);
   }
 
   // Log auth state for debugging (only in development)
   if (process.env.NODE_ENV === 'development') {
-    console.log('[PROXY]', request.nextUrl.pathname, 'User:', user?.email || 'anonymous');
+    console.log('[MIDDLEWARE]', request.nextUrl.pathname, 'User:', session?.user?.email || 'anonymous');
   }
+
+  // Get the authenticated user from the session
+  const user = session?.user || null;
 
   // Helper to fetch user profile (role and subscription status)
   const getUserProfile = async (userId: string) => {
@@ -71,7 +74,7 @@ export async function proxy(request: NextRequest) {
       .single();
 
     if (profileError) {
-      console.error('[PROXY] Error fetching profile:', profileError);
+      console.error('[MIDDLEWARE] Error fetching profile:', profileError);
       return null;
     }
     return profile;
@@ -80,7 +83,7 @@ export async function proxy(request: NextRequest) {
   // Protect admin routes - require admin role
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!user) {
-      console.log('[PROXY] Admin route access denied - no user');
+      console.log('[MIDDLEWARE] Admin route access denied - no user');
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirect', request.nextUrl.pathname);
@@ -90,21 +93,21 @@ export async function proxy(request: NextRequest) {
     const profile = await getUserProfile(user.id);
 
     if (!profile || profile.role !== 'admin') {
-      console.log('[PROXY] Admin route access denied - not admin');
+      console.log('[MIDDLEWARE] Admin route access denied - not admin');
       const url = request.nextUrl.clone();
       url.pathname = '/';
       return NextResponse.redirect(url);
     }
 
     // Admin has access - continue
-    console.log('[PROXY] Admin access granted for:', user.email);
+    console.log('[MIDDLEWARE] Admin access granted for:', user.email);
   }
 
   // Protect account routes - require authentication
   // Admins always have full access regardless of subscription status
   if (request.nextUrl.pathname.startsWith('/account')) {
     if (!user) {
-      console.log('[PROXY] Account route access denied - no user');
+      console.log('[MIDDLEWARE] Account route access denied - no user');
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       url.searchParams.set('redirect', request.nextUrl.pathname);
@@ -115,7 +118,7 @@ export async function proxy(request: NextRequest) {
 
     // Admins bypass all subscription checks
     if (profile?.role === 'admin') {
-      console.log('[PROXY] Admin bypass - full access granted for:', user.email);
+      console.log('[MIDDLEWARE] Admin bypass - full access granted for:', user.email);
       return supabaseResponse;
     }
 
@@ -137,4 +140,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
-
