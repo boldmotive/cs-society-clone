@@ -130,11 +130,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function fetchProfile(userId: string) {
     console.log('fetchProfile called with userId:', userId);
 
-    // Create a timeout promise that rejects after 10 seconds
+    // Create a timeout promise that rejects after 30 seconds
+    // This allows for network latency in production environments
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        reject(new Error('Profile fetch timeout after 10s'));
-      }, 10000);
+        reject(new Error('Profile fetch timeout after 30s'));
+      }, 30000);
     });
 
     try {
@@ -176,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (err instanceof Error && err.name === 'AbortError') {
         console.warn('Profile fetch aborted (timeout)');
       } else if (err instanceof Error && err.message.includes('timeout')) {
-        console.warn('Profile fetch timed out:', err.message);
+        console.warn('Profile fetch timed out after 30s. This may indicate a slow network connection or Supabase latency.');
       } else {
         console.error('Error fetching profile:', err);
       }
