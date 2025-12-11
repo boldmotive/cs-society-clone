@@ -152,16 +152,16 @@ export default function PricingSection() {
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           <PricingCard
             plan="monthly"
-            price="$10"
+            price="$14.99"
             period="/month"
             subtitle="Flexible month-to-month"
             features={monthlyFeatures}
           />
           <PricingCard
             plan="annual"
-            price="$102"
+            price="$144"
             period="/year"
-            subtitle="Just $8.50/mo · Save $18"
+            subtitle="Just $11.99/mo · Save $35.98"
             features={annualFeatures}
             highlighted
             badge="SAVE 15%"

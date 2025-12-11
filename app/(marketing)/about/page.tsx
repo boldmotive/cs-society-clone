@@ -7,12 +7,12 @@ export const metadata = {
 
 export default function AboutPage() {
   const teamMembers = [
-    { name: "Sarah Chen", role: "President", emoji: "👩‍💻" },
-    { name: "Marcus Johnson", role: "Vice President", emoji: "👨‍💼" },
-    { name: "Priya Patel", role: "Events Lead", emoji: "📅" },
-    { name: "Alex Rivera", role: "Tech Lead", emoji: "⚙️" },
-    { name: "Jordan Kim", role: "Outreach Lead", emoji: "🌐" },
-    { name: "Taylor Morgan", role: "Secretary", emoji: "📝" },
+    { name: "Emily Portalatin-Mendez", role: "President", emoji: "👩‍💻" },
+    { name: "Jennypher Pepin", role: "Marketing Lead", emoji: "👩‍💼" },
+    { name: "Alexa Weinberg", role: "Support Lead", emoji: "📅" },
+    { name: "Open Role", role: "Tech Lead", emoji: "⚙️" },
+    { name: "Open Role", role: "Outreach Lead", emoji: "🌐" },
+    { name: "Open Role", role: "Secretary", emoji: "📝" },
   ];
 
   const stats = [
@@ -55,8 +55,9 @@ export default function AboutPage() {
           <div className="bg-[#0f1d32]/80 border border-gray-700/50 rounded-xl p-6 sm:p-8">
             <p className="text-gray-300 mb-4">
               Founded in 2024, the Computer Science Society started with a simple mission: create a space
-              where students could learn, collaborate, and grow together. What began as a small group of
-              passionate coders has evolved into a thriving community of hundreds of members.
+              where students and aspiring professionals could learn, collaborate, and grow together. 
+              What began as a small group of passionate coders has evolved into a 
+              thriving community of of creative members.
             </p>
             <p className="text-gray-300 mb-4">
               We believe that everyone has the potential to create amazing things with technology. Whether
