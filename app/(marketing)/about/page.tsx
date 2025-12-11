@@ -7,19 +7,22 @@ export const metadata = {
 
 export default function AboutPage() {
   const teamMembers = [
-    { name: "Emily Portalatin-Mendez", role: "President", emoji: "👩‍💻" },
+    { name: "Emily Portalatin-Mendez", role: "Operations Lead", emoji: "👩‍💻" },
     { name: "Jennypher Pepin", role: "Marketing Lead", emoji: "👩‍💼" },
-    { name: "Alexa Weinberg", role: "Support Lead", emoji: "📅" },
-    { name: "Open Role", role: "Tech Lead", emoji: "⚙️" },
+    { name: "Alexa Weinberg", role: "Education Lead", emoji: "👩‍🏫" },
+    { name: "Open Role", role: "Events Lead", emoji: "📅" },
+    { name: "Open Role", role: "Tech Lead", emoji: "💻" },
     { name: "Open Role", role: "Outreach Lead", emoji: "🌐" },
-    { name: "Open Role", role: "Secretary", emoji: "📝" },
+    { name: "Open Role", role: "Security Lead", emoji: "🛡️" },
+    { name: "Open Role", role: "Finance Lead", emoji: "💸" },
+    { name: "Open Role", role: "Executive Assistant", emoji: "📝" },
   ];
 
   const stats = [
-    { number: "500+", label: "Active Members" },
+    { number: "250+", label: "Active Members" },
     { number: "50+", label: "Events Per Year" },
     { number: "100+", label: "Projects Showcased" },
-    { number: "20+", label: "Industry Partners" },
+    { number: "10+", label: "Industry Partners" },
   ];
 
   return (
@@ -57,7 +60,7 @@ export default function AboutPage() {
               Founded in 2024, the Computer Science Society started with a simple mission: create a space
               where students and aspiring professionals could learn, collaborate, and grow together. 
               What began as a small group of passionate coders has evolved into a 
-              thriving community of of creative members.
+              thriving community of creative members.
             </p>
             <p className="text-gray-300 mb-4">
               We believe that everyone has the potential to create amazing things with technology. Whether
