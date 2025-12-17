@@ -2,12 +2,20 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
+
+interface NavItem {
+  label: string;
+  children: { href: string; label: string }[];
+}
 
 export default function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { user, profile, isAdmin, isLoading } = useAuth();
 
   useEffect(() => {
@@ -19,7 +27,10 @@ export default function Navigation() {
   }, []);
 
   // Close mobile menu when clicking outside or on a link
-  const closeMobileMenu = () => setMobileMenuOpen(false);
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setMobileOpenDropdown(null);
+  };
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -33,13 +44,65 @@ export default function Navigation() {
     };
   }, [mobileMenuOpen]);
 
-  const navLinks = [
-    { href: '/programs', icon: '📚', label: 'Programs' },
-    { href: '/events', icon: '📅', label: 'Events' },
-    { href: '/projects', icon: '💎', label: 'Projects' },
-    { href: '/faq', icon: 'ℹ️', label: 'FAQ' },
-    { href: '/contact', icon: '📞', label: 'Contact' },
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const navMenus: NavItem[] = [
+    {
+      label: 'Learn About Us',
+      children: [
+        { href: '/mission', label: 'Mission' },
+        { href: '/about', label: 'The Team' },
+        { href: '/events', label: 'Events' },
+        { href: '/projects', label: 'Projects' },
+      ],
+    },
+    {
+      label: 'Get Involved',
+      children: [
+        { href: '/workshops', label: 'Workshops' },
+        { href: '/hackathons', label: 'Hackathons' },
+        { href: '/partners', label: 'Partners' },
+        { href: '/sponsorship', label: 'Sponsorship' },
+        { href: '/scholarships', label: 'Scholarships' },
+      ],
+    },
+    {
+      label: 'Pricing & Resources',
+      children: [
+        { href: '/pricing', label: 'Pricing' },
+        { href: '/media-kit', label: 'Media Kit' },
+        { href: '/contact', label: 'Contact' },
+        { href: '/faq', label: 'FAQ' },
+      ],
+    },
   ];
+
+  const handleDropdownEnter = (label: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    setOpenDropdown(label);
+  };
+
+  const handleDropdownLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 150);
+  };
+
+  const toggleMobileDropdown = (label: string) => {
+    setMobileOpenDropdown(mobileOpenDropdown === label ? null : label);
+  };
 
   return (
     <nav
@@ -60,22 +123,59 @@ export default function Navigation() {
               width={48}
               height={48}
             />
-            <span className="text-white font-semibold">Computer Science Society</span>
-            <span className="text-gray-500 text-xs hidden sm:inline">EST. 2024</span>
+            <span className="text-white font-semibold" style={{ fontFamily: 'system-ui, sans-serif' }}>Computer Science Society</span>
+            <span className="text-gray-500 text-xs hidden sm:inline" style={{ fontFamily: 'system-ui, sans-serif' }}>EST. 2024</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="nav-link text-gray-400 hover:text-white flex items-center gap-1">
-                <span>{link.icon}</span> {link.label}
-              </Link>
+          <div className="hidden lg:flex items-center gap-6" style={{ fontFamily: 'system-ui, sans-serif' }}>
+            {navMenus.map((menu) => (
+              <div
+                key={menu.label}
+                className="dropdown-container relative"
+                onMouseEnter={() => handleDropdownEnter(menu.label)}
+                onMouseLeave={handleDropdownLeave}
+              >
+                <button
+                  className="nav-link text-gray-400 hover:text-white flex items-center gap-1 py-2"
+                  aria-expanded={openDropdown === menu.label}
+                  aria-haspopup="true"
+                >
+                  {menu.label}
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${openDropdown === menu.label ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div
+                  className={`absolute top-full left-0 mt-1 py-2 bg-[#0a1628] border border-gray-700 rounded-lg shadow-xl min-w-[180px] transition-all duration-200 ${
+                    openDropdown === menu.label
+                      ? 'opacity-100 visible translate-y-0'
+                      : 'opacity-0 invisible -translate-y-2'
+                  }`}
+                  style={{ fontFamily: 'system-ui, sans-serif' }}
+                >
+                  {menu.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className="block px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 transition-colors"
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
 
             {/* Admin Link - Only visible to admins */}
             {isAdmin && (
               <Link href="/admin/events" className="nav-link text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
-                <span>⚙️</span> Admin
+                Admin
               </Link>
             )}
 
@@ -142,19 +242,45 @@ export default function Navigation() {
       {/* Mobile Menu Panel */}
       <div
         className={`lg:hidden fixed left-0 right-0 z-50 bg-[#0a1628] border-b border-gray-700 transition-all duration-300 ease-in-out ${mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}
-        style={{ top: '64px', maxHeight: 'calc(100vh - 64px)', overflowY: 'auto' }}
+        style={{ top: '64px', maxHeight: 'calc(100vh - 64px)', overflowY: 'auto', fontFamily: 'system-ui, sans-serif' }}
       >
         <div className="px-4 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="flex items-center gap-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-base"
-              onClick={closeMobileMenu}
-            >
-              <span className="text-xl">{link.icon}</span>
-              <span>{link.label}</span>
-            </Link>
+          {navMenus.map((menu) => (
+            <div key={menu.label} className="rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleMobileDropdown(menu.label)}
+                className="w-full flex items-center justify-between px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-base"
+                aria-expanded={mobileOpenDropdown === menu.label}
+              >
+                <span>{menu.label}</span>
+                <svg
+                  className={`w-5 h-5 transition-transform duration-200 ${mobileOpenDropdown === menu.label ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  mobileOpenDropdown === menu.label ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="pl-4 py-1 space-y-1">
+                  {menu.children.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className="block px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors text-sm"
+                      onClick={closeMobileMenu}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
 
           {/* Admin Link - Only visible to admins */}
@@ -164,7 +290,6 @@ export default function Navigation() {
               className="flex items-center gap-3 px-4 py-3 text-cyan-400 hover:text-cyan-300 hover:bg-gray-800/50 rounded-lg transition-colors text-base"
               onClick={closeMobileMenu}
             >
-              <span className="text-xl">⚙️</span>
               <span>Admin</span>
             </Link>
           )}
