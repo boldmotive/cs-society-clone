@@ -161,6 +161,9 @@ app/
 │   │   │   └── route.ts     ← Order history API
 │   │   └── stock/
 │   │       └── route.ts     ← Stock checking API
+│   ├── spreadconnect/
+│   │   └── webhooks/
+│   │       └── route.ts     ← SpreadConnect webhook handler (no signature verification)
 │   └── admin/
 │       └── shop/
 │           ├── sync/
@@ -195,9 +198,8 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# SpreadConnect (CRITICAL: Single API key only!)
+# SpreadConnect (CRITICAL: Single API key only, no webhook secret!)
 SPREADCONNECT_API_KEY=your_api_key_here
-SPREADCONNECT_WEBHOOK_SECRET=your_webhook_secret
 ```
 
 ### Supabase Configuration (Production)
@@ -221,6 +223,16 @@ SPREADCONNECT_WEBHOOK_SECRET=your_webhook_secret
 - Authentication method: Bearer token (`Authorization: Bearer YOUR_API_KEY`)
 - **NOT** Basic Auth (no base64 encoding)
 - **NEVER** expose API key to client-side
+
+### Webhook Security (IMPORTANT!)
+**SpreadConnect webhooks do NOT support signature verification!**
+
+To secure webhooks:
+- Use non-guessable webhook URL (consider adding random token to path)
+- Validate all webhook data server-side before processing
+- Use HTTPS only (enforced by Vercel)
+- Monitor webhook logs for suspicious activity
+- Consider rate limiting webhook endpoint
 
 ### API Client Pattern
 ```typescript
@@ -406,6 +418,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 - [ ] Check `/api/auth/debug` endpoint
 - [ ] Test shop access (members-only)
 - [ ] Verify admin panel access (admins-only)
+- [ ] Configure SpreadConnect webhook (optional but recommended)
 
 ### Before Public Launch
 - [ ] Remove or protect `/api/auth/debug` endpoint
@@ -413,8 +426,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 - [ ] Test on multiple browsers and devices
 - [ ] Set up error tracking (Sentry, etc.)
 - [ ] Verify OAuth app settings in Google/GitHub consoles
-- [ ] Verify SpreadConnect webhook configured
+- [ ] Configure SpreadConnect webhook endpoint
 - [ ] Test end-to-end shop order flow
+- [ ] Consider adding random token to webhook URL for extra security
 
 ## Code Patterns
 
@@ -444,6 +458,7 @@ const supabase = createSupabaseBrowserClient();
 - Bearer token authentication
 - Retry logic with exponential backoff
 - Rate limiting awareness
+- Webhooks have NO signature verification
 
 ### Shopping Cart Pattern
 - Client-side state in localStorage
@@ -493,12 +508,13 @@ This project has extensive deployment documentation:
 - **Stripe Secret Key**: Server environment variable only
 - **Supabase Service Role Key**: Server environment variable only, used for webhook handlers
 - All secrets accessed via `process.env` (server-side only)
+- **SpreadConnect webhooks**: NO signature verification available - secure URL with obfuscation
 
 ### Environment Variables
 - Never commit `.env.local` to git
 - All secrets in environment variables
 - Same values in local and Vercel production
-- SpreadConnect uses single API key (not key+secret pair)
+- SpreadConnect uses single API key (no webhook secret exists)
 
 ### Client-Side Security
 - SpreadConnect API never called from client
@@ -539,6 +555,7 @@ This project has extensive deployment documentation:
 5. **Next.js 16 async params** - Must await params in dynamic routes
 6. **useSearchParams requires Suspense** - Wrap in Suspense boundary
 7. **Buffer/Blob conversion** - Use Uint8Array for edge runtime compatibility
+8. **SpreadConnect webhook security** - No signature verification, rely on URL obfuscation
 
 ## Future Improvements
 
@@ -564,3 +581,4 @@ This project has extensive deployment documentation:
 - Return/refund management
 - Multi-currency support
 - Internationalization (i18n)
+- Enhanced webhook security (custom token in URL path)

@@ -7,7 +7,6 @@ Add these to your `.env.local` file and Vercel environment variables:
 ```bash
 # SpreadConnect API Credentials (TREAT AS SECRET - server-side only!)
 SPREADCONNECT_API_KEY=your_spreadconnect_api_key
-SPREADCONNECT_WEBHOOK_SECRET=your_webhook_secret
 
 # Existing variables (already configured)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -28,18 +27,17 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
    - Generate/copy your API key (treat it as a secret!)
    - This is your only credential - it acts like a password
 
-3. **Webhook Secret**
+3. **Set Up Webhooks** (Optional but recommended)
    - In SpreadConnect dashboard, go to Webhooks section
    - Create a webhook pointing to: `https://your-site.vercel.app/api/spreadconnect/webhooks`
    - Subscribe to events: `order.processed`, `shipment.sent`, `order.cancelled`
-   - Copy the webhook secret
+   - Note: SpreadConnect does not provide webhook signature verification
 
 ## Add to Vercel
 
 ```bash
-# Add each variable
+# Add the variable
 vercel env add SPREADCONNECT_API_KEY
-vercel env add SPREADCONNECT_WEBHOOK_SECRET
 ```
 
 ## Test Connection

@@ -13,6 +13,7 @@ SpreadConnect API credentials are **SECRET** and must never be exposed to the cl
    - Never stored in database
    - Never sent to client
    - Used as Bearer token in API requests
+   - Note: SpreadConnect webhooks do NOT have signature verification
 
 2. **API Client Location**: `lib/spreadconnect.ts`
    - Reads from `process.env` (server-side only)
@@ -92,6 +93,22 @@ SPREADCONNECT_API_KEY=your_secret_api_key  # Never commit to git! Treat like a p
 ```bash
 # Added via Vercel dashboard or CLI
 vercel env add SPREADCONNECT_API_KEY
+```
+
+### Webhook Security (Important!)
+
+**SpreadConnect webhooks do NOT support signature verification.**
+
+To secure webhooks:
+1. Use a non-guessable webhook URL (consider adding a random token to the path)
+2. Validate all webhook data server-side before processing
+3. Use HTTPS only (enforced by Vercel)
+4. Monitor webhook logs for suspicious activity
+5. Consider rate limiting webhook endpoint
+
+Example secured webhook URL pattern:
+```
+https://your-site.vercel.app/api/spreadconnect/webhooks/[random-token]
 ```
 
 Both `.env.local` and Vercel environment variables are:
