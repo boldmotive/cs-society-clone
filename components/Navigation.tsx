@@ -79,7 +79,7 @@ export default function Navigation() {
     {
       label: 'Pricing & Resources',
       children: [
-        { href: '/pricing', label: 'Pricing' },
+        { href: '/memberships', label: 'Pricing' },
         { href: '/media-kit', label: 'Media Kit' },
         { href: '/contact', label: 'Contact' },
         { href: '/faq', label: 'FAQ' },
