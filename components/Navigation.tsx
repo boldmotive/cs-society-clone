@@ -72,7 +72,7 @@ export default function Navigation() {
         { href: '/workshops', label: 'Workshops' },
         { href: '/hackathons', label: 'Hackathons' },
         { href: '/partners', label: 'Partners' },
-        { href: '/sponsorship', label: 'Sponsorship' },
+        { href: '/sponsors', label: 'Sponsorship' },
         { href: '/scholarships', label: 'Scholarships' },
       ],
     },

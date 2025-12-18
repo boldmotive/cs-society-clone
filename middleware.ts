@@ -103,6 +103,18 @@ export async function middleware(request: NextRequest) {
     console.log('[MIDDLEWARE] Admin access granted for:', user.email);
   }
 
+  // Protect shop routes - require authentication (members-only)
+  if (request.nextUrl.pathname.startsWith('/shop')) {
+    if (!user) {
+      console.log('[MIDDLEWARE] Shop route access denied - no user');
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(url);
+    }
+    console.log('[MIDDLEWARE] Shop access granted for:', user.email);
+  }
+
   // Protect account routes - require authentication
   // Admins always have full access regardless of subscription status
   if (request.nextUrl.pathname.startsWith('/account')) {

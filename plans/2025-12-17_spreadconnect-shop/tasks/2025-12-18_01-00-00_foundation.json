@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "content": "[Phase-1] Create database schema migration for shop tables (shop_products, shop_product_variants, shop_orders, shop_order_items, shop_settings) with RLS policies",
+    "status": "completed"
+  },
+  {
+    "id": "2",
+    "content": "[Phase-1] Build SpreadConnect API client (lib/spreadconnect.ts) with authentication, product/order methods, error handling, and TypeScript types",
+    "status": "completed"
+  },
+  {
+    "id": "3",
+    "content": "[Phase-2] Create admin product sync API endpoint (/api/admin/shop/sync) and settings management (/api/admin/shop/settings)",
+    "status": "completed"
+  },
+  {
+    "id": "4",
+    "content": "[Phase-2] Build shop product APIs (list products, product detail, stock check) with real-time pricing and caching",
+    "status": "completed"
+  },
+  {
+    "id": "5",
+    "content": "[Phase-3] Create shop frontend pages (layout, product listing, product detail) with middleware protection and shopping cart context",
+    "status": "completed"
+  },
+  {
+    "id": "6",
+    "content": "[Phase-4] Implement checkout flow with Stripe integration, webhook handler for shop orders, and SpreadConnect order submission",
+    "status": "completed"
+  }
+]

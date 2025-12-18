@@ -73,6 +73,15 @@ export async function POST(request: NextRequest) {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('[WEBHOOK] Processing checkout.session.completed');
 
+  // Check if this is a shop order or subscription
+  const orderType = session.metadata?.order_type;
+
+  if (orderType === 'shop') {
+    await handleShopOrderCompleted(session);
+    return;
+  }
+
+  // Handle subscription checkout
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
   const customerEmail = session.customer_email || session.customer_details?.email;
@@ -179,6 +188,100 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   if (error) {
     console.error('[WEBHOOK] Error updating payment status:', error);
+  }
+}
+
+async function handleShopOrderCompleted(session: Stripe.Checkout.Session) {
+  console.log('[WEBHOOK] Processing shop order checkout.session.completed');
+
+  const userId = session.metadata?.user_id;
+  const itemsJson = session.metadata?.items;
+  const shippingAddressJson = session.metadata?.shipping_address;
+
+  if (!userId || !itemsJson || !shippingAddressJson) {
+    console.error('[WEBHOOK] Missing required metadata for shop order');
+    return;
+  }
+
+  const items = JSON.parse(itemsJson);
+  const shippingAddress = JSON.parse(shippingAddressJson);
+
+  // Create order in database
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from('shop_orders')
+    .insert({
+      user_id: userId,
+      stripe_session_id: session.id,
+      stripe_payment_intent_id: session.payment_intent as string,
+      status: 'paid',
+      total_cents: session.amount_total || 0,
+      currency: session.currency?.toUpperCase() || 'USD',
+      shipping_address: shippingAddress,
+    })
+    .select()
+    .single();
+
+  if (orderError || !order) {
+    console.error('[WEBHOOK] Error creating shop order:', orderError);
+    throw orderError;
+  }
+
+  console.log(`[WEBHOOK] Created order ${order.id}`);
+
+  // Create order items
+  const orderItems = items.map((item: any) => ({
+    order_id: order.id,
+    product_id: item.productId,
+    variant_id: item.variantId,
+    quantity: item.quantity,
+    price_cents: item.priceCents,
+    spreadconnect_sku: item.variantSku,
+  }));
+
+  const { error: itemsError } = await supabaseAdmin
+    .from('shop_order_items')
+    .insert(orderItems);
+
+  if (itemsError) {
+    console.error('[WEBHOOK] Error creating order items:', itemsError);
+    throw itemsError;
+  }
+
+  console.log(`[WEBHOOK] Created ${orderItems.length} order items`);
+
+  // Submit order to SpreadConnect
+  try {
+    const { submitOrderToSpreadConnect, formatAddressForSpreadConnect } = await import('@/lib/spreadconnect');
+
+    const spreadConnectOrder = {
+      reference: order.id,
+      recipient: formatAddressForSpreadConnect(shippingAddress),
+      items: items.map((item: any) => ({
+        sku: item.variantSku,
+        quantity: item.quantity,
+      })),
+    };
+
+    const { spreadconnectOrderId } = await submitOrderToSpreadConnect(spreadConnectOrder);
+
+    // Update order with SpreadConnect order ID
+    const { error: updateError } = await supabaseAdmin
+      .from('shop_orders')
+      .update({
+        spreadconnect_order_id: spreadconnectOrderId,
+        status: 'submitted',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', order.id);
+
+    if (updateError) {
+      console.error('[WEBHOOK] Error updating order with SpreadConnect ID:', updateError);
+    } else {
+      console.log(`[WEBHOOK] Order submitted to SpreadConnect: ${spreadconnectOrderId}`);
+    }
+  } catch (spreadConnectError) {
+    console.error('[WEBHOOK] Error submitting to SpreadConnect:', spreadConnectError);
+    // Don't throw - order is created, we can retry SpreadConnect submission later
   }
 }
 

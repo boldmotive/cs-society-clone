@@ -26,11 +26,11 @@ export default function StorePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Store</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">The Terminal Shop</h1>
           <p className="text-gray-400 mt-2">Your purchases and order history</p>
         </div>
         <Link
-          href="/store"
+          href="/shop"
           className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
         >
           Browse Store →
@@ -48,7 +48,7 @@ export default function StorePage() {
               You haven&apos;t made any purchases yet. Check out our store!
             </p>
             <Link
-              href="/store"
+              href="/shop"
               className="inline-block bg-cyan-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-cyan-600 transition-colors"
             >
               Visit Store

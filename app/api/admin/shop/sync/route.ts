@@ -1,0 +1,167 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getSpreadConnectClient } from '@/lib/spreadconnect';
+
+// POST sync products from SpreadConnect
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createSupabaseServerClient();
+
+    // Check authentication
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check admin role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Initialize SpreadConnect client
+    let spreadConnect;
+    try {
+      spreadConnect = getSpreadConnectClient();
+    } catch (error) {
+      console.error('[Shop Sync] SpreadConnect client error:', error);
+      return NextResponse.json(
+        { error: 'SpreadConnect API credentials not configured' },
+        { status: 500 }
+      );
+    }
+
+    // Fetch all articles from SpreadConnect
+    console.log('[Shop Sync] Fetching articles from SpreadConnect...');
+    const articlesResponse = await spreadConnect.getArticles({ limit: 100 });
+    const articles = articlesResponse.items;
+
+    console.log(`[Shop Sync] Found ${articles.length} articles`);
+
+    let productsAdded = 0;
+    let productsUpdated = 0;
+    let variantsAdded = 0;
+
+    // Fetch stock data for all variants
+    console.log('[Shop Sync] Fetching stock data...');
+    const stockData = await spreadConnect.getStock({ limit: 1000 });
+
+    // Process each article
+    for (const article of articles) {
+      try {
+        // Upsert product
+        const { data: existingProduct } = await supabase
+          .from('shop_products')
+          .select('id')
+          .eq('spreadconnect_id', article.id)
+          .single();
+
+        const productData = {
+          spreadconnect_id: article.id,
+          name: article.name,
+          description: article.description || null,
+          image_url: article.images?.[0] || null,
+          is_active: true,
+        };
+
+        let productId: string;
+
+        if (existingProduct) {
+          // Update existing product
+          const { data: updatedProduct, error: updateError } = await supabase
+            .from('shop_products')
+            .update(productData)
+            .eq('id', existingProduct.id)
+            .select('id')
+            .single();
+
+          if (updateError) {
+            console.error(`[Shop Sync] Error updating product ${article.id}:`, updateError);
+            continue;
+          }
+
+          productId = updatedProduct.id;
+          productsUpdated++;
+        } else {
+          // Insert new product
+          const { data: newProduct, error: insertError } = await supabase
+            .from('shop_products')
+            .insert(productData)
+            .select('id')
+            .single();
+
+          if (insertError) {
+            console.error(`[Shop Sync] Error inserting product ${article.id}:`, insertError);
+            continue;
+          }
+
+          productId = newProduct.id;
+          productsAdded++;
+        }
+
+        // Process variants
+        if (article.variants && article.variants.length > 0) {
+          for (const variant of article.variants) {
+            try {
+              const stockQuantity = stockData.items[variant.sku] || 0;
+
+              const variantData = {
+                product_id: productId,
+                spreadconnect_sku: variant.sku,
+                size: variant.sizeId,
+                color: variant.appearanceId,
+                appearance_id: variant.appearanceId,
+                base_price_cents: Math.round(variant.price * 100), // Convert to cents
+                stock_quantity: stockQuantity,
+                is_available: stockQuantity > 0,
+              };
+
+              // Upsert variant
+              const { error: variantError } = await supabase
+                .from('shop_product_variants')
+                .upsert(variantData, {
+                  onConflict: 'spreadconnect_sku',
+                });
+
+              if (variantError) {
+                console.error(`[Shop Sync] Error upserting variant ${variant.sku}:`, variantError);
+              } else {
+                variantsAdded++;
+              }
+            } catch (variantError) {
+              console.error(`[Shop Sync] Error processing variant:`, variantError);
+            }
+          }
+        }
+      } catch (articleError) {
+        console.error(`[Shop Sync] Error processing article ${article.id}:`, articleError);
+      }
+    }
+
+    const summary = {
+      success: true,
+      productsAdded,
+      productsUpdated,
+      variantsAdded,
+      totalArticles: articles.length,
+    };
+
+    console.log('[Shop Sync] Complete:', summary);
+
+    return NextResponse.json(summary);
+  } catch (error) {
+    console.error('[Shop Sync] Error:', error);
+    return NextResponse.json(
+      {
+        error: 'Sync failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
+  }
+}
