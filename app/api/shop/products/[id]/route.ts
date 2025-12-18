@@ -4,11 +4,11 @@ import { createSupabaseServerClient } from '@/lib/supabase-server';
 // GET single product with variants
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createSupabaseServerClient();
-    const { id } = params;
+    const { id } = await params;
 
     // Fetch product with variants
     const { data: product, error } = await supabase
