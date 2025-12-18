@@ -324,7 +324,12 @@ export class SpreadConnectAPI {
    */
   async uploadDesign(imageBuffer: Buffer, filename: string): Promise<{ designId: string }> {
     const formData = new FormData();
-    const blob = new Blob([imageBuffer], { type: 'image/png' });
+    // Convert Buffer to Blob properly for Next.js edge runtime
+    const arrayBuffer = imageBuffer.buffer.slice(
+      imageBuffer.byteOffset,
+      imageBuffer.byteOffset + imageBuffer.byteLength
+    );
+    const blob = new Blob([arrayBuffer], { type: 'image/png' });
     formData.append('file', blob, filename);
 
     const url = `${this.baseUrl}/designs/upload`;
