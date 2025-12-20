@@ -36,14 +36,17 @@ export default function ShopPage() {
       const response = await fetch('/api/shop/products');
       
       if (!response.ok) {
-        throw new Error('Failed to fetch products');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Shop] API error:', response.status, errorData);
+        throw new Error(errorData.error || `Failed to fetch products (${response.status})`);
       }
 
       const data = await response.json();
+      console.log('[Shop] Fetched products:', data);
       setProducts(data.products || []);
     } catch (err) {
       console.error('[Shop] Error fetching products:', err);
-      setError('Failed to load products. Please try again later.');
+      setError(err instanceof Error ? err.message : 'Failed to load products. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -147,9 +150,17 @@ export default function ShopPage() {
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
           No Products Available
         </h2>
-        <p className="text-gray-600">
-          Check back soon for CS Society merchandise!
+        <p className="text-gray-600 mb-4">
+          Products need to be synced from SpreadConnect.
         </p>
+        <div className="text-sm text-gray-500">
+          <p>📋 <strong>To add products:</strong></p>
+          <ol className="mt-2 text-left inline-block">
+            <li>1. Create products in SpreadConnect dashboard</li>
+            <li>2. Go to <a href="/admin/shop" className="text-blue-600 hover:underline">/admin/shop</a> (admin only)</li>
+            <li>3. Click "Sync Products" button</li>
+          </ol>
+        </div>
       </div>
     );
   }
