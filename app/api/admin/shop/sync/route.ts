@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
     let productsAdded = 0;
     let productsUpdated = 0;
     let variantsAdded = 0;
+    const debugLog: string[] = [];
 
     // Fetch stock data for all variants
     console.log('[Shop Sync] Fetching stock data...');
@@ -54,6 +55,8 @@ export async function POST(request: NextRequest) {
     // Process each article
     for (const article of articles) {
       try {
+        debugLog.push(`Processing article: ${article.id} - "${article.name}"`);
+        debugLog.push(`Article has ${article.variants?.length || 0} variants`);
         console.log(`[Shop Sync] Processing article: ${article.id} - "${article.name}"`);
         console.log(`[Shop Sync] Article has ${article.variants?.length || 0} variants`);
         
@@ -86,12 +89,14 @@ export async function POST(request: NextRequest) {
             .single();
 
           if (updateError) {
+            debugLog.push(`ERROR updating product: ${JSON.stringify(updateError)}`);
             console.error(`[Shop Sync] Error updating product ${article.id}:`, updateError);
             continue;
           }
 
           productId = updatedProduct.id;
           productsUpdated++;
+          debugLog.push(`✓ Updated product ${productId}`);
           console.log(`[Shop Sync] Updated product ${productId}`);
         } else {
           // Insert new product
@@ -102,17 +107,20 @@ export async function POST(request: NextRequest) {
             .single();
 
           if (insertError) {
+            debugLog.push(`ERROR inserting product: ${JSON.stringify(insertError)}`);
             console.error(`[Shop Sync] Error inserting product ${article.id}:`, insertError);
             continue;
           }
 
           productId = newProduct.id;
           productsAdded++;
+          debugLog.push(`✓ Inserted new product ${productId}`);
           console.log(`[Shop Sync] Inserted new product ${productId}`);
         }
 
         // Process variants
         if (article.variants && article.variants.length > 0) {
+          debugLog.push(`Processing ${article.variants.length} variants`);
           console.log(`[Shop Sync] Processing ${article.variants.length} variants for product ${productId}`);
           for (const variant of article.variants) {
             try {
@@ -139,19 +147,24 @@ export async function POST(request: NextRequest) {
                 });
 
               if (variantError) {
+                debugLog.push(`ERROR with variant ${variant.sku}: ${JSON.stringify(variantError)}`);
                 console.error(`[Shop Sync] Error upserting variant ${variant.sku}:`, variantError);
               } else {
                 variantsAdded++;
+                debugLog.push(`✓ Added variant ${variant.sku}`);
                 console.log(`[Shop Sync] Added variant ${variant.sku}`);
               }
             } catch (variantError) {
+              debugLog.push(`EXCEPTION processing variant: ${variantError}`);
               console.error(`[Shop Sync] Error processing variant:`, variantError);
             }
           }
         } else {
+          debugLog.push(`⚠️ WARNING: Article has no variants!`);
           console.warn(`[Shop Sync] Article ${article.id} has no variants!`);
         }
       } catch (articleError) {
+        debugLog.push(`EXCEPTION processing article: ${articleError}`);
         console.error(`[Shop Sync] Error processing article ${article.id}:`, articleError);
       }
     }
@@ -162,6 +175,7 @@ export async function POST(request: NextRequest) {
       productsUpdated,
       variantsAdded,
       totalArticles: articles.length,
+      debugLog, // Include debug log in response
     };
 
     console.log('[Shop Sync] Complete:', summary);

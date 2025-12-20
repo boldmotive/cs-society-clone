@@ -26,6 +26,13 @@ export default function AdminShopPage() {
 
       const result = await response.json();
       console.log('[Admin Shop] Sync successful:', result);
+      
+      // Log debug information
+      if (result.debugLog && result.debugLog.length > 0) {
+        console.log('[Admin Shop] Debug Log:');
+        result.debugLog.forEach((log: string) => console.log('  ', log));
+      }
+      
       setSyncResult(result);
     } catch (err) {
       console.error('[Admin Shop] Sync error:', err);
@@ -154,7 +161,7 @@ export default function AdminShopPage() {
           <h3 className="text-lg font-semibold text-green-900 mb-3">
             Sync Completed Successfully
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div>
               <p className="text-sm text-green-600">Products Added</p>
               <p className="text-2xl font-bold text-green-900">
@@ -180,6 +187,20 @@ export default function AdminShopPage() {
               </p>
             </div>
           </div>
+          
+          {/* Debug Log */}
+          {syncResult.debugLog && syncResult.debugLog.length > 0 && (
+            <details className="mt-4">
+              <summary className="cursor-pointer text-sm font-semibold text-green-800 hover:text-green-900">
+                View Detailed Sync Log ({syncResult.debugLog.length} entries)
+              </summary>
+              <div className="mt-2 bg-white rounded border border-green-300 p-3 max-h-96 overflow-y-auto">
+                <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+                  {syncResult.debugLog.join('\n')}
+                </pre>
+              </div>
+            </details>
+          )}
         </div>
       )}
 
