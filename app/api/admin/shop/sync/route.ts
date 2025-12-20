@@ -131,7 +131,17 @@ export async function POST(request: NextRequest) {
           console.log(`[Shop Sync] Processing ${article.variants.length} variants for product ${productId}`);
           for (const variant of article.variants) {
             try {
+              // Log first variant to see structure
+              if (article.variants.indexOf(variant) === 0) {
+                debugLog.push(`Sample variant data: ${JSON.stringify(variant).substring(0, 300)}`);
+              }
+              
               const stockQuantity = stockData.items[variant.sku] || 0;
+              
+              // Extract price - check multiple possible field names
+              const variantAny = variant as any;
+              const priceValue = variant.price || variantAny.basePrice || variantAny.cost || variantAny.amount || 0;
+              const priceCents = priceValue ? Math.round(priceValue * 100) : 0;
 
               const variantData = {
                 product_id: productId,
@@ -139,10 +149,14 @@ export async function POST(request: NextRequest) {
                 size: variant.sizeId,
                 color: variant.appearanceId,
                 appearance_id: variant.appearanceId,
-                base_price_cents: Math.round(variant.price * 100), // Convert to cents
+                base_price_cents: priceCents,
                 stock_quantity: stockQuantity,
                 is_available: stockQuantity > 0,
               };
+              
+              if (priceCents === 0) {
+                debugLog.push(`⚠️ Warning: Variant ${variant.sku} has no price, defaulting to $0`);
+              }
 
               console.log(`[Shop Sync] Variant data:`, variantData);
 
