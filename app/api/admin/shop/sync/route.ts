@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
     // Process each article
     for (const article of articles) {
       try {
+        console.log(`[Shop Sync] Processing article: ${article.id} - "${article.name}"`);
+        console.log(`[Shop Sync] Article has ${article.variants?.length || 0} variants`);
+        
         // Upsert product
         const { data: existingProduct } = await supabase
           .from('shop_products')
@@ -68,6 +71,8 @@ export async function POST(request: NextRequest) {
           image_url: article.images?.[0] || null,
           is_active: true,
         };
+
+        console.log(`[Shop Sync] Product data:`, productData);
 
         let productId: string;
 
@@ -87,6 +92,7 @@ export async function POST(request: NextRequest) {
 
           productId = updatedProduct.id;
           productsUpdated++;
+          console.log(`[Shop Sync] Updated product ${productId}`);
         } else {
           // Insert new product
           const { data: newProduct, error: insertError } = await supabase
@@ -102,10 +108,12 @@ export async function POST(request: NextRequest) {
 
           productId = newProduct.id;
           productsAdded++;
+          console.log(`[Shop Sync] Inserted new product ${productId}`);
         }
 
         // Process variants
         if (article.variants && article.variants.length > 0) {
+          console.log(`[Shop Sync] Processing ${article.variants.length} variants for product ${productId}`);
           for (const variant of article.variants) {
             try {
               const stockQuantity = stockData.items[variant.sku] || 0;
@@ -121,6 +129,8 @@ export async function POST(request: NextRequest) {
                 is_available: stockQuantity > 0,
               };
 
+              console.log(`[Shop Sync] Variant data:`, variantData);
+
               // Upsert variant
               const { error: variantError } = await supabase
                 .from('shop_product_variants')
@@ -132,11 +142,14 @@ export async function POST(request: NextRequest) {
                 console.error(`[Shop Sync] Error upserting variant ${variant.sku}:`, variantError);
               } else {
                 variantsAdded++;
+                console.log(`[Shop Sync] Added variant ${variant.sku}`);
               }
             } catch (variantError) {
               console.error(`[Shop Sync] Error processing variant:`, variantError);
             }
           }
+        } else {
+          console.warn(`[Shop Sync] Article ${article.id} has no variants!`);
         }
       } catch (articleError) {
         console.error(`[Shop Sync] Error processing article ${article.id}:`, articleError);
