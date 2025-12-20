@@ -62,7 +62,9 @@ export async function POST(request: NextRequest) {
         console.log(`[Shop Sync] Article has ${article.variants?.length || 0} variants`);
         
         // Extract name - SpreadConnect might use different field names
-        const productName = article.name || article.title || article.productName || `Product ${article.id}`;
+        // Cast to any to access potential fields not in our type definition
+        const articleAny = article as any;
+        const productName = article.name || articleAny.title || articleAny.productName || `Product ${article.id}`;
         
         // Upsert product
         const { data: existingProduct } = await supabase
