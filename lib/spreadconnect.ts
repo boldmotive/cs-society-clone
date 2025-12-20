@@ -134,7 +134,7 @@ export class SpreadConnectAPI {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const headers = {
-      'Authorization': `Bearer ${this.apiKey}`,
+      'X-SPOD-ACCESS-TOKEN': this.apiKey,
       'Content-Type': 'application/json',
       ...options.headers,
     };
@@ -333,7 +333,7 @@ export class SpreadConnectAPI {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'X-SPOD-ACCESS-TOKEN': this.apiKey,
       },
       body: formData,
     });

@@ -12,8 +12,8 @@ Authorization: Basic base64(apiKey:apiSecret)
 
 ### Current (Correct) Implementation  
 ```typescript
-// ✅ CORRECT - Using Bearer token with single API key
-Authorization: Bearer YOUR_API_KEY
+// ✅ CORRECT - Using X-SPOD-ACCESS-TOKEN header with single API key
+X-SPOD-ACCESS-TOKEN: YOUR_API_KEY
 ```
 
 ## Updated Files
@@ -62,7 +62,7 @@ class SpreadConnectAPI {
   private async request<T>(endpoint: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,  // ← Single API key
+        'X-SPOD-ACCESS-TOKEN': this.apiKey,  // ← Single API key in custom header
         'Content-Type': 'application/json',
       },
     });
