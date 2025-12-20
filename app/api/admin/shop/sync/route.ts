@@ -55,10 +55,14 @@ export async function POST(request: NextRequest) {
     // Process each article
     for (const article of articles) {
       try {
-        debugLog.push(`Processing article: ${article.id} - "${article.name}"`);
+        debugLog.push(`Processing article: ${article.id}`);
+        debugLog.push(`Raw article data: ${JSON.stringify(article).substring(0, 500)}`);
         debugLog.push(`Article has ${article.variants?.length || 0} variants`);
-        console.log(`[Shop Sync] Processing article: ${article.id} - "${article.name}"`);
+        console.log(`[Shop Sync] Processing article:`, article);
         console.log(`[Shop Sync] Article has ${article.variants?.length || 0} variants`);
+        
+        // Extract name - SpreadConnect might use different field names
+        const productName = article.name || article.title || article.productName || `Product ${article.id}`;
         
         // Upsert product
         const { data: existingProduct } = await supabase
@@ -69,12 +73,13 @@ export async function POST(request: NextRequest) {
 
         const productData = {
           spreadconnect_id: article.id,
-          name: article.name,
+          name: productName,
           description: article.description || null,
           image_url: article.images?.[0] || null,
           is_active: true,
         };
 
+        debugLog.push(`Product name: "${productName}"`);
         console.log(`[Shop Sync] Product data:`, productData);
 
         let productId: string;
