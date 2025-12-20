@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useShopCart, formatPrice } from '@/lib/shop-cart-context';
+import { SafeHtml, containsHtml } from '@/components/ui/safe-html';
 
 interface ProductVariant {
   id: string;
   spreadconnect_sku: string;
   size: string;
   color: string;
+  color_hex?: string;
   appearance_id: string;
   base_price_cents: number;
   final_price_cents: number;
@@ -17,12 +19,35 @@ interface ProductVariant {
   is_available: boolean;
 }
 
+interface ProductImage {
+  id: string;
+  image_url: string;
+  perspective?: string;
+  appearance_id?: string;
+  appearance_name?: string;
+  sort_order?: number;
+}
+
 interface Product {
   id: string;
   name: string;
   description?: string;
   image_url?: string;
+  images?: ProductImage[];
   variants: ProductVariant[];
+}
+
+/**
+ * Validates if a string is a valid URL that can be used with Next.js Image component
+ */
+function isValidImageUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
 }
 
 export default function ProductDetailPage() {
@@ -36,6 +61,7 @@ export default function ProductDetailPage() {
   
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [adding, setAdding] = useState(false);
 
@@ -84,13 +110,26 @@ export default function ProductDetailPage() {
     ? [...new Set(product.variants.filter(v => v.is_available).map(v => v.size))]
     : [];
 
-  const availableColors = product
-    ? [...new Set(
-        product.variants
-          .filter(v => v.is_available && (!selectedSize || v.size === selectedSize))
-          .map(v => v.color)
-      )]
+  // Get unique colors with their hex values
+  const availableColorOptions = product
+    ? product.variants
+        .filter(v => v.is_available && (!selectedSize || v.size === selectedSize))
+        .reduce((acc, v) => {
+          if (!acc.find(c => c.name === v.color)) {
+            acc.push({ name: v.color, hex: v.color_hex });
+          }
+          return acc;
+        }, [] as { name: string; hex?: string }[])
     : [];
+
+  // Get product images, fallback to main image_url if no images array
+  const productImages = product?.images?.length
+    ? product.images
+    : product?.image_url
+      ? [{ id: 'main', image_url: product.image_url, perspective: 'front' }]
+      : [];
+
+  const currentImage = productImages[selectedImageIndex]?.image_url || product?.image_url;
 
   const handleAddToCart = () => {
     if (!selectedVariant || !product) return;
@@ -174,31 +213,62 @@ export default function ProductDetailPage() {
       </nav>
 
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Product Image */}
-        <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
-          {product.image_url ? (
-            <Image
-              src={product.image_url}
-              alt={product.name}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <svg
-                className="w-24 h-24 text-gray-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
+        {/* Product Images */}
+        <div className="space-y-4">
+          {/* Main Image */}
+          <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            {isValidImageUrl(currentImage) ? (
+              <Image
+                src={currentImage!}
+                alt={product.name}
+                fill
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <svg
+                  className="w-24 h-24 text-gray-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+
+          {/* Image Thumbnails */}
+          {productImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {productImages.map((img, index) => (
+                <button
+                  key={img.id}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                    selectedImageIndex === index
+                      ? 'border-blue-600'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  {isValidImageUrl(img.image_url) ? (
+                    <Image
+                      src={img.image_url}
+                      alt={`${product.name} - ${img.perspective || 'view'} ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200" />
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </div>
@@ -215,8 +285,12 @@ export default function ProductDetailPage() {
           </div>
 
           {product.description && (
-            <div className="prose prose-sm text-gray-600">
-              <p>{product.description}</p>
+            <div className="prose prose-sm text-gray-600 max-w-none">
+              {containsHtml(product.description) ? (
+                <SafeHtml html={product.description} />
+              ) : (
+                <p>{product.description}</p>
+              )}
             </div>
           )}
 
@@ -245,23 +319,37 @@ export default function ProductDetailPage() {
           )}
 
           {/* Color Selection */}
-          {availableColors.length > 0 && (
+          {availableColorOptions.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                Color
+                Color: <span className="font-normal text-gray-600 capitalize">{selectedColor}</span>
               </label>
-              <div className="flex flex-wrap gap-2">
-                {availableColors.map((color) => (
+              <div className="flex flex-wrap gap-3">
+                {availableColorOptions.map((colorOption) => (
                   <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
-                      selectedColor === color
-                        ? 'border-blue-600 bg-blue-50 text-blue-600'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                    key={colorOption.name}
+                    onClick={() => setSelectedColor(colorOption.name)}
+                    className={`group relative flex items-center gap-2 px-3 py-2 border rounded-lg transition-colors ${
+                      selectedColor === colorOption.name
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 hover:border-gray-400'
                     }`}
+                    title={colorOption.name}
                   >
-                    {color}
+                    {/* Color Swatch */}
+                    {colorOption.hex && (
+                      <span
+                        className="w-5 h-5 rounded-full border border-gray-300 flex-shrink-0"
+                        style={{ backgroundColor: colorOption.hex }}
+                      />
+                    )}
+                    <span className={`font-medium capitalize ${
+                      selectedColor === colorOption.name
+                        ? 'text-blue-600'
+                        : 'text-gray-700'
+                    }`}>
+                      {colorOption.name}
+                    </span>
                   </button>
                 ))}
               </div>

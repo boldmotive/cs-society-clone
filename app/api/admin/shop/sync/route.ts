@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
-import { getSpreadConnectClient } from '@/lib/spreadconnect';
+import { getSpreadConnectClient, getArticleImageUrl, getArticleImages } from '@/lib/spreadconnect';
 
 // POST sync products from SpreadConnect
 export async function POST(request: NextRequest) {
@@ -73,13 +73,19 @@ export async function POST(request: NextRequest) {
           .eq('spreadconnect_id', article.id)
           .single();
 
+        // Extract image URL from images array (API returns objects with imageUrl property)
+        const imageUrl = getArticleImageUrl(article);
+
         const productData = {
           spreadconnect_id: article.id,
           name: productName,
           description: article.description || null,
-          image_url: article.images?.[0] || null,
+          image_url: imageUrl,
           is_active: true,
         };
+
+        debugLog.push(`Image URL extracted: "${imageUrl}"`);
+        console.log(`[Shop Sync] Image URL:`, imageUrl);
 
         debugLog.push(`Product name: "${productName}"`);
         console.log(`[Shop Sync] Product data:`, productData);
@@ -133,31 +139,40 @@ export async function POST(request: NextRequest) {
             try {
               // Log first variant to see structure
               if (article.variants.indexOf(variant) === 0) {
-                debugLog.push(`Sample variant data: ${JSON.stringify(variant).substring(0, 300)}`);
+                debugLog.push(`Sample variant data: ${JSON.stringify(variant).substring(0, 500)}`);
               }
-              
+
               const stockQuantity = stockData.items[variant.sku] || 0;
-              
-              // Extract price - check multiple possible field names
+
+              // Extract price from SpreadConnect API
+              // API returns prices in dollars (e.g., 21.56), we store in cents
+              // d2cPrice = Direct to Consumer price, b2bPrice = B2B price
               const variantAny = variant as any;
-              const priceValue = variant.price || variantAny.basePrice || variantAny.cost || variantAny.amount || 0;
-              const priceCents = priceValue ? Math.round(priceValue * 100) : 0;
+              const priceInDollars = variant.d2cPrice || variant.b2bPrice || variantAny.d2cPrice || variantAny.b2bPrice || variant.price || 0;
+              const priceCents = priceInDollars ? Math.round(priceInDollars * 100) : 0;
+
+              // Use human-readable names for size and color (fallback to IDs if names not available)
+              const sizeName = variant.sizeName || variantAny.sizeName || String(variant.sizeId);
+              const colorName = variant.appearanceName || variantAny.appearanceName || String(variant.appearanceId);
+              const colorHex = variant.appearanceColorValue || variantAny.appearanceColorValue || null;
 
               const variantData = {
                 product_id: productId,
                 spreadconnect_sku: variant.sku,
-                size: variant.sizeId,
-                color: variant.appearanceId,
-                appearance_id: variant.appearanceId,
+                size: sizeName,
+                color: colorName,
+                color_hex: colorHex,
+                appearance_id: String(variant.appearanceId),
                 base_price_cents: priceCents,
                 stock_quantity: stockQuantity,
                 is_available: stockQuantity > 0,
               };
-              
+
               if (priceCents === 0) {
-                debugLog.push(`⚠️ Warning: Variant ${variant.sku} has no price, defaulting to $0`);
+                debugLog.push(`⚠️ Warning: Variant ${variant.sku} has no price (d2cPrice: ${variant.d2cPrice}, b2bPrice: ${variant.b2bPrice}), defaulting to $0`);
               }
 
+              debugLog.push(`Variant ${variant.sku}: size="${sizeName}" color="${colorName}" colorHex="${colorHex}" price=$${(priceCents / 100).toFixed(2)}`);
               console.log(`[Shop Sync] Variant data:`, variantData);
 
               // Upsert variant
@@ -183,6 +198,40 @@ export async function POST(request: NextRequest) {
         } else {
           debugLog.push(`⚠️ WARNING: Article has no variants!`);
           console.warn(`[Shop Sync] Article ${article.id} has no variants!`);
+        }
+
+        // Process multiple product images
+        const articleImages = getArticleImages(article);
+        if (articleImages.length > 0) {
+          debugLog.push(`Processing ${articleImages.length} images for product ${productId}`);
+
+          // Delete existing images for this product to avoid duplicates
+          await supabase
+            .from('shop_product_images')
+            .delete()
+            .eq('product_id', productId);
+
+          // Insert all images
+          const imageInserts = articleImages.map((img, index) => ({
+            product_id: productId,
+            spreadconnect_image_id: String(img.id),
+            image_url: img.imageUrl,
+            perspective: img.perspective || 'front',
+            appearance_id: img.appearanceId ? String(img.appearanceId) : null,
+            appearance_name: img.appearanceName || null,
+            sort_order: index,
+          }));
+
+          const { error: imagesError } = await supabase
+            .from('shop_product_images')
+            .insert(imageInserts);
+
+          if (imagesError) {
+            debugLog.push(`ERROR inserting images: ${JSON.stringify(imagesError)}`);
+            console.error(`[Shop Sync] Error inserting images:`, imagesError);
+          } else {
+            debugLog.push(`✓ Added ${articleImages.length} images`);
+          }
         }
       } catch (articleError) {
         debugLog.push(`EXCEPTION processing article: ${articleError}`);

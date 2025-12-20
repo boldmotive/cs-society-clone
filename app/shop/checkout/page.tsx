@@ -5,6 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useShopCart, formatPrice } from '@/lib/shop-cart-context';
 import Image from 'next/image';
 
+/**
+ * Validates if a string is a valid URL that can be used with Next.js Image component
+ */
+function isValidImageUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalCents, clearCart } = useShopCart();
@@ -293,10 +306,10 @@ export default function CheckoutPage() {
             <div className="space-y-3">
               {items.map((item) => (
                 <div key={item.variantId} className="flex items-start space-x-3">
-                  {item.imageUrl && (
+                  {isValidImageUrl(item.imageUrl) && (
                     <div className="flex-shrink-0 w-16 h-16 bg-white rounded overflow-hidden">
                       <Image
-                        src={item.imageUrl}
+                        src={item.imageUrl!}
                         alt={item.productName}
                         width={64}
                         height={64}

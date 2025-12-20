@@ -10,12 +10,13 @@ export async function GET(
     const supabase = await createSupabaseServerClient();
     const { id } = await params;
 
-    // Fetch product with variants
+    // Fetch product with variants and images
     const { data: product, error } = await supabase
       .from('shop_products')
       .select(`
         *,
-        variants:shop_product_variants(*)
+        variants:shop_product_variants(*),
+        images:shop_product_images(*)
       `)
       .eq('id', id)
       .eq('is_active', true)
@@ -43,7 +44,7 @@ export async function GET(
 
     const markupPercentage = settings?.markup_percentage || 0.30;
 
-    // Calculate final prices for each variant
+    // Calculate final prices for each variant and sort images
     const productWithPricing = {
       ...product,
       variants: product.variants?.map((variant: any) => ({
@@ -52,6 +53,8 @@ export async function GET(
         final_price_cents: Math.round(variant.base_price_cents * (1 + markupPercentage)),
         markup_percentage: markupPercentage,
       })) || [],
+      // Sort images by sort_order
+      images: (product.images || []).sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0)),
     };
 
     return NextResponse.json(productWithPricing);

@@ -21,6 +21,19 @@ interface Product {
   variants: ProductVariant[];
 }
 
+/**
+ * Validates if a string is a valid URL that can be used with Next.js Image component
+ */
+function isValidImageUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,9 +200,9 @@ export default function ShopPage() {
           >
             {/* Product Image */}
             <div className="relative w-full h-64 bg-gray-100 overflow-hidden">
-              {product.image_url ? (
+              {isValidImageUrl(product.image_url) ? (
                 <Image
-                  src={product.image_url}
+                  src={product.image_url!}
                   alt={product.name}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-300"

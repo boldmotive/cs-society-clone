@@ -19,6 +19,39 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
       },
+      // SpreadConnect/SPOD image domains
+      {
+        protocol: 'https',
+        hostname: 'image.spreadshirtmedia.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.spreadshirtmedia.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.spreadshirtmedia.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.spreadshirtmedia.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'spreadconnect.app',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.spreadconnect.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'spod.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.spod.com',
+      },
     ],
   },
   async redirects() {

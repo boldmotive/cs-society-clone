@@ -17,22 +17,107 @@ export interface ProductType {
   categoryId?: number;
 }
 
+export interface ArticleImage {
+  id: number;
+  productId?: number;
+  appearanceId?: number;
+  appearanceName?: string;
+  perspective?: string;
+  imageUrl: string;
+}
+
 export interface Article {
   id: string;
   name: string;
+  title?: string; // Some API responses use 'title' instead of 'name'
   description?: string;
   productTypeId: number;
   designs: Design[];
   variants: ArticleVariant[];
-  images: string[];
+  images: ArticleImage[];
+}
+
+/**
+ * Validates if a string is a valid URL
+ */
+export function isValidUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Extracts a valid image URL from an Article's images array
+ * Returns the first valid imageUrl or null if none found
+ */
+export function getArticleImageUrl(article: Article | any): string | null {
+  if (!article?.images || !Array.isArray(article.images)) {
+    return null;
+  }
+
+  for (const img of article.images) {
+    // Handle case where images array contains objects with imageUrl
+    if (typeof img === 'object' && img !== null && 'imageUrl' in img) {
+      if (isValidUrl(img.imageUrl)) {
+        return img.imageUrl;
+      }
+    }
+    // Handle case where images array contains direct URL strings (legacy/fallback)
+    if (typeof img === 'string' && isValidUrl(img)) {
+      return img;
+    }
+  }
+
+  return null;
 }
 
 export interface ArticleVariant {
+  id?: number;
   sku: string;
   appearanceId: string;
+  appearanceName?: string;
+  appearanceColorValue?: string; // Hex color code e.g. "#000000"
   sizeId: string;
-  price: number; // in cents
+  sizeName?: string; // Human-readable size e.g. "S", "M", "L", "XL"
+  // Price fields from SpreadConnect API (in dollars, e.g. 21.56)
+  d2cPrice?: number; // Final price for customer (D2C = Direct to Consumer)
+  b2bPrice?: number; // B2B price
+  price?: number; // Legacy/fallback field
   stock?: number;
+}
+
+/**
+ * Extracts all valid image URLs from an Article's images array
+ * Returns an array of image objects with URL and perspective info
+ */
+export function getArticleImages(article: Article | any): ArticleImage[] {
+  if (!article?.images || !Array.isArray(article.images)) {
+    return [];
+  }
+
+  const validImages: ArticleImage[] = [];
+
+  for (const img of article.images) {
+    // Handle case where images array contains objects with imageUrl
+    if (typeof img === 'object' && img !== null && 'imageUrl' in img) {
+      if (isValidUrl(img.imageUrl)) {
+        validImages.push({
+          id: img.id || 0,
+          productId: img.productId,
+          appearanceId: img.appearanceId,
+          appearanceName: img.appearanceName,
+          perspective: img.perspective || 'front',
+          imageUrl: img.imageUrl,
+        });
+      }
+    }
+  }
+
+  return validImages;
 }
 
 export interface Design {

@@ -4,6 +4,19 @@ import { useShopCart, formatPrice } from '@/lib/shop-cart-context';
 import Link from 'next/link';
 import Image from 'next/image';
 
+/**
+ * Validates if a string is a valid URL that can be used with Next.js Image component
+ */
+function isValidImageUrl(url: string | null | undefined): boolean {
+  if (!url || typeof url !== 'string') return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 export default function ShoppingCart() {
   const {
     items,
@@ -86,10 +99,10 @@ export default function ShoppingCart() {
                   className="flex items-start space-x-4 bg-gray-50 rounded-lg p-4"
                 >
                   {/* Product Image */}
-                  {item.imageUrl && (
+                  {isValidImageUrl(item.imageUrl) && (
                     <div className="flex-shrink-0 w-20 h-20 bg-white rounded-lg overflow-hidden">
                       <Image
-                        src={item.imageUrl}
+                        src={item.imageUrl!}
                         alt={item.productName}
                         width={80}
                         height={80}
