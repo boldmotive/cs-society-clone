@@ -19,11 +19,13 @@ export default function AdminShopPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Sync failed');
+        const data = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Admin Shop] Sync API error:', response.status, data);
+        throw new Error(data.error || data.details || `Sync failed (${response.status})`);
       }
 
       const result = await response.json();
+      console.log('[Admin Shop] Sync successful:', result);
       setSyncResult(result);
     } catch (err) {
       console.error('[Admin Shop] Sync error:', err);
@@ -183,8 +185,34 @@ export default function AdminShopPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+          <div className="flex items-start">
+            <svg
+              className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-red-800 mb-1">Sync Failed</h4>
+              <p className="text-sm text-red-700">{error}</p>
+              <div className="mt-3 text-xs text-red-600 bg-red-100 rounded p-2">
+                <p className="font-semibold mb-1">Common causes:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>SpreadConnect API key not set in Vercel environment variables</li>
+                  <li>Invalid API key</li>
+                  <li>No products created in SpreadConnect dashboard</li>
+                  <li>Network or API timeout</li>
+                </ul>
+                <p className="mt-2">Check Vercel function logs for detailed error information.</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
