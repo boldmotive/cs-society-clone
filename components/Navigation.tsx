@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useUser, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
 interface NavItem {
   label: string;
@@ -16,7 +17,8 @@ export default function Navigation() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { user, profile, isAdmin, isLoading } = useAuth();
+  const { profile, isAdmin, isLoading } = useAuth();
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -180,26 +182,16 @@ export default function Navigation() {
             )}
 
             {/* Auth Buttons */}
-            {user ? (
+            <SignedIn>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white text-sm">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        console.error('Avatar failed to load:', profile.avatar_url);
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement!.textContent = user?.email?.[0]?.toUpperCase() || '?';
-                      }}
-                    />
-                  ) : (
-                    user?.email?.[0]?.toUpperCase() || '?'
-                  )}
-                </div>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: 'w-8 h-8 border-2 border-cyan-500',
+                    }
+                  }}
+                />
                 <Link
                   href="/dashboard"
                   className="discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-2 rounded-lg text-sm"
@@ -207,16 +199,19 @@ export default function Navigation() {
                   Dashboard
                 </Link>
               </div>
-            ) : isLoading ? (
-              <div className="text-gray-500 text-sm">.{" "}.{" "}.</div>
-            ) : (
-              <Link
-                href="/login"
-                className="discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-2 rounded-lg text-sm"
-              >
-                Sign In
-              </Link>
-            )}
+            </SignedIn>
+            <SignedOut>
+              {!clerkLoaded ? (
+                <div className="text-gray-500 text-sm">.{" "}.{" "}.</div>
+              ) : (
+                <Link
+                  href="/sign-in"
+                  className="discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-2 rounded-lg text-sm"
+                >
+                  Sign In
+                </Link>
+              )}
+            </SignedOut>
           </div>
 
           {/* Mobile menu button */}
@@ -298,27 +293,17 @@ export default function Navigation() {
           <div className="border-t border-gray-700 my-3" />
 
           {/* Auth Section */}
-          {user ? (
+          <SignedIn>
             <div className="px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white">
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        console.error('Avatar failed to load:', profile.avatar_url);
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement!.textContent = user?.email?.[0]?.toUpperCase() || '?';
-                      }}
-                    />
-                  ) : (
-                    user?.email?.[0]?.toUpperCase() || '?'
-                  )}
-                </div>
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: 'w-10 h-10 border-2 border-cyan-500',
+                    }
+                  }}
+                />
                 <Link
                   href="/dashboard"
                   className="flex-1 text-center discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-3 rounded-lg text-base font-medium"
@@ -328,19 +313,22 @@ export default function Navigation() {
                 </Link>
               </div>
             </div>
-          ) : isLoading ? (
-            <div className="px-4 py-3 text-gray-500 text-sm">Loading...</div>
-          ) : (
-            <div className="px-4 py-3">
-              <Link
-                href="/login"
-                className="block w-full text-center discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-3 rounded-lg text-base font-medium"
-                onClick={closeMobileMenu}
-              >
-                Sign In
-              </Link>
-            </div>
-          )}
+          </SignedIn>
+          <SignedOut>
+            {!clerkLoaded ? (
+              <div className="px-4 py-3 text-gray-500 text-sm">Loading...</div>
+            ) : (
+              <div className="px-4 py-3">
+                <Link
+                  href="/sign-in"
+                  className="block w-full text-center discord-btn bg-transparent border border-cyan-500 text-cyan-400 px-4 py-3 rounded-lg text-base font-medium"
+                  onClick={closeMobileMenu}
+                >
+                  Sign In
+                </Link>
+              </div>
+            )}
+          </SignedOut>
         </div>
       </div>
     </nav>

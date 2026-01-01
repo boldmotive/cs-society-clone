@@ -1,11 +1,13 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
+import { useUser } from '@clerk/nextjs';
 import { ManageSubscription } from '@/components/ManageSubscription';
 import Link from 'next/link';
 
 export default function AccountPage() {
-  const { user, profile, isSubscribed } = useAuth();
+  const { user } = useUser();
+  const { profile, isSubscribed } = useAuth();
 
   const subscriptionStatus = profile?.subscription_status || 'inactive';
   const subscriptionPlan = profile?.subscription_plan;
@@ -47,16 +49,16 @@ export default function AccountPage() {
           <div className="space-y-3">
             <div>
               <span className="text-gray-400 text-sm">Email</span>
-              <p className="text-white">{user?.email || 'Not set'}</p>
+              <p className="text-white">{user?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
             </div>
             <div>
               <span className="text-gray-400 text-sm">Name</span>
-              <p className="text-white">{profile?.full_name || 'Not set'}</p>
+              <p className="text-white">{profile?.full_name || user?.fullName || 'Not set'}</p>
             </div>
             <div>
               <span className="text-gray-400 text-sm">Member Since</span>
               <p className="text-white">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Unknown'}
               </p>
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
+import { useClerk } from '@clerk/nextjs';
 
 const navItems = [
   { href: '/dashboard', icon: '🏠', label: 'Dashboard' },
@@ -21,10 +21,10 @@ interface AccountSidebarProps {
 
 export default function AccountSidebar({ mobileMenuOpen, onCloseMobileMenu }: AccountSidebarProps) {
   const pathname = usePathname();
-  const { signOut } = useAuth();
+  const { signOut } = useClerk();
 
   const handleLogout = async () => {
-    await signOut();
+    await signOut({ redirectUrl: '/' });
   };
 
   const isActive = (href: string) => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
+import { useUser } from '@clerk/nextjs';
 import AccountSidebar from '@/components/AccountSidebar';
 
 export default function AccountLayout({
@@ -11,15 +11,15 @@ export default function AccountLayout({
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isLoading } = useAuth();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/login?redirect=/dashboard');
+    if (isLoaded && !user) {
+      router.push('/sign-in?redirect_url=/dashboard');
     }
-  }, [isLoading, user, router]);
+  }, [isLoaded, user, router]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function AccountLayout({
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <div className="min-h-[calc(100vh-64px)] bg-[#0a1628] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>

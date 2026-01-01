@@ -4,9 +4,12 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { ManageSubscription } from '@/components/ManageSubscription';
 import Link from 'next/link';
+import { useUser, useClerk } from '@clerk/nextjs';
 
 export default function SettingsPage() {
-  const { user, profile, isSubscribed, signOut } = useAuth();
+  const { profile, isSubscribed } = useAuth();
+  const { user: clerkUser } = useUser();
+  const { signOut } = useClerk();
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
 
@@ -114,12 +117,12 @@ export default function SettingsPage() {
           <div className="space-y-3">
             <div>
               <span className="text-gray-400 text-sm">Email</span>
-              <p className="text-white">{user?.email || 'Not set'}</p>
+              <p className="text-white">{clerkUser?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
             </div>
             <div>
               <span className="text-gray-400 text-sm">Member Since</span>
               <p className="text-white">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                {clerkUser?.createdAt ? new Date(clerkUser.createdAt).toLocaleDateString() : 'Unknown'}
               </p>
             </div>
           </div>
@@ -135,7 +138,7 @@ export default function SettingsPage() {
                 <p className="text-gray-400 text-sm">Sign out of your account on this device</p>
               </div>
               <button
-                onClick={() => signOut()}
+                onClick={() => signOut({ redirectUrl: '/' })}
                 className="text-red-400 hover:text-red-300 font-medium transition-colors px-4 py-2 border border-red-500/30 rounded-lg hover:bg-red-500/10"
               >
                 Sign Out

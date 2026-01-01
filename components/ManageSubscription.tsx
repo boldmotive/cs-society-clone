@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useUser } from '@clerk/nextjs';
 
 interface ManageSubscriptionProps {
   className?: string;
@@ -9,12 +10,13 @@ interface ManageSubscriptionProps {
 }
 
 export function ManageSubscription({ className = '', variant = 'button' }: ManageSubscriptionProps) {
-  const { user, profile, isSubscribed, isLoading: authLoading } = useAuth();
+  const { profile, isSubscribed, isLoading: authLoading } = useAuth();
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleManageSubscription = async () => {
-    if (!user) {
+    if (!clerkUser) {
       setError('Please log in to manage your subscription');
       return;
     }
@@ -48,11 +50,11 @@ export function ManageSubscription({ className = '', variant = 'button' }: Manag
   };
 
   // Don't render if user is not authenticated or doesn't have a subscription
-  if (authLoading) {
+  if (!clerkLoaded || authLoading) {
     return null;
   }
 
-  if (!user || !isSubscribed) {
+  if (!clerkUser || !isSubscribed) {
     return null;
   }
 

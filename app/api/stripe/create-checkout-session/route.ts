@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import Stripe from 'stripe';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { stripe, getPriceId, type PlanType } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
@@ -31,9 +32,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is logged in (optional - supports guest checkout)
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check if user is logged in with Clerk (optional - supports guest checkout)
+    const { userId } = await auth();
+    const clerkUser = userId ? await currentUser() : null;
 
     // Build checkout session parameters
     const origin = request.headers.get('origin') || 'http://localhost:3000';
@@ -55,25 +56,28 @@ export async function POST(request: NextRequest) {
     };
 
     // If user is logged in, attach their info to the session
-    if (user) {
+    if (userId) {
+      const supabase = await createSupabaseServerClient();
+
       // Check if user already has a Stripe customer ID
       const { data: profile } = await supabase
         .from('profiles')
         .select('stripe_customer_id, email')
-        .eq('id', user.id)
+        .eq('id', userId)
         .single();
 
       if (profile?.stripe_customer_id) {
         sessionParams.customer = profile.stripe_customer_id;
       } else {
-        // Pre-fill email for new customers
-        sessionParams.customer_email = user.email || profile?.email || undefined;
+        // Pre-fill email for new customers - get from Clerk user or profile
+        const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || profile?.email;
+        sessionParams.customer_email = userEmail || undefined;
       }
 
       // Store user ID in metadata for webhook processing
       sessionParams.metadata = {
         ...sessionParams.metadata,
-        user_id: user.id,
+        user_id: userId,
       };
     }
 

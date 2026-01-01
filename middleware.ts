@@ -1,154 +1,49 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+// Define route matchers for protected routes
+const isProtectedRoute = createRouteMatcher([
+  '/admin(.*)',
+  '/shop(.*)',
+  '/account(.*)',
+]);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('[MIDDLEWARE] Missing Supabase credentials');
-    return supabaseResponse;
-  }
+export default clerkMiddleware(async (auth, req) => {
+  const { userId, sessionClaims } = await auth();
 
-  // Determine if we're in production (HTTPS)
-  const isProduction = request.nextUrl.protocol === 'https:';
-
-  // Production-ready cookie options
-  const cookieOptions = {
-    secure: isProduction,
-    sameSite: 'lax' as const,
-    path: '/',
-  };
-
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        supabaseResponse = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, {
-            ...cookieOptions,
-            ...options,
-            // Ensure secure is true in production
-            secure: isProduction ? true : (options?.secure ?? false),
-          })
-        );
-      },
-    },
-  });
-
-  // Refresh session if it exists - this ensures expired sessions are refreshed
-  // Using getSession() instead of getUser() allows session refresh with new tokens
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-  // Only log unexpected auth errors, not "AuthSessionMissingError" which is expected for anonymous visitors
-  if (sessionError && sessionError.name !== 'AuthSessionMissingError') {
-    console.error('[MIDDLEWARE] Session error:', sessionError);
-  }
-
-  // Log auth state for debugging (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[MIDDLEWARE]', request.nextUrl.pathname, 'User:', session?.user?.email || 'anonymous');
-  }
-
-  // Get the authenticated user from the session
-  const user = session?.user || null;
-
-  // Helper to fetch user profile (role and subscription status)
-  const getUserProfile = async (userId: string) => {
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, subscription_status')
-      .eq('id', userId)
-      .single();
-
-    if (profileError) {
-      console.error('[MIDDLEWARE] Error fetching profile:', profileError);
-      return null;
+  // Protect routes that require authentication
+  if (isProtectedRoute(req)) {
+    if (!userId) {
+      // Redirect to sign-in for unauthenticated users
+      const signInUrl = new URL('/sign-in', req.url);
+      signInUrl.searchParams.set('redirect_url', req.url);
+      return NextResponse.redirect(signInUrl);
     }
-    return profile;
-  };
+  }
 
   // Protect admin routes - require admin role
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      console.log('[MIDDLEWARE] Admin route access denied - no user');
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
-      return NextResponse.redirect(url);
+  if (isAdminRoute(req)) {
+    // Check if user has admin role in their session claims (set via Clerk publicMetadata)
+    // The role is stored in publicMetadata and synced to session claims
+    const metadata = sessionClaims?.publicMetadata as { role?: string } | undefined;
+    const userRole = metadata?.role;
+
+    if (userRole !== 'admin') {
+      // Redirect non-admins to home page
+      return NextResponse.redirect(new URL('/', req.url));
     }
-
-    const profile = await getUserProfile(user.id);
-
-    if (!profile || profile.role !== 'admin') {
-      console.log('[MIDDLEWARE] Admin route access denied - not admin');
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-
-    // Admin has access - continue
-    console.log('[MIDDLEWARE] Admin access granted for:', user.email);
   }
 
-  // Protect shop routes - require authentication (members-only)
-  if (request.nextUrl.pathname.startsWith('/shop')) {
-    if (!user) {
-      console.log('[MIDDLEWARE] Shop route access denied - no user');
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
-      return NextResponse.redirect(url);
-    }
-    console.log('[MIDDLEWARE] Shop access granted for:', user.email);
-  }
-
-  // Protect account routes - require authentication
-  // Admins always have full access regardless of subscription status
-  if (request.nextUrl.pathname.startsWith('/account')) {
-    if (!user) {
-      console.log('[MIDDLEWARE] Account route access denied - no user');
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      url.searchParams.set('redirect', request.nextUrl.pathname);
-      return NextResponse.redirect(url);
-    }
-
-    const profile = await getUserProfile(user.id);
-
-    // Admins bypass all subscription checks
-    if (profile?.role === 'admin') {
-      console.log('[MIDDLEWARE] Admin bypass - full access granted for:', user.email);
-      return supabaseResponse;
-    }
-
-    // For regular users, you can add subscription checks here if needed
-    // Example: if you want to restrict certain account pages to subscribers only
-    // const isSubscribed = profile?.subscription_status === 'active';
-    // if (!isSubscribed && request.nextUrl.pathname.startsWith('/account/premium')) {
-    //   const url = request.nextUrl.clone();
-    //   url.pathname = '/#pricing';
-    //   return NextResponse.redirect(url);
-    // }
-  }
-
-  return supabaseResponse;
-}
+  return NextResponse.next();
+});
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };

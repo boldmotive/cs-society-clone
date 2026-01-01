@@ -1,77 +1,58 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
+import { currentUser } from '@clerk/nextjs/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
 
-// Production-ready cookie options
-// Note: In server components, we can't easily detect HTTPS, so we use NODE_ENV
-const isProduction = process.env.NODE_ENV === 'production';
-const defaultCookieOptions = {
-  secure: isProduction,
-  sameSite: 'lax' as const,
-  path: '/',
-};
-
-export async function createSupabaseServerClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll();
-      },
-      setAll(cookiesToSet) {
-        try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, {
-              ...defaultCookieOptions,
-              ...options,
-              // Ensure secure is true in production
-              secure: isProduction ? true : (options?.secure ?? false),
-            })
-          );
-        } catch {
-          // This can happen when calling from a Server Component
-          // The cookies will be set by middleware instead
-        }
-      },
+/**
+ * Creates a Supabase client for server-side operations.
+ * Uses service role key for full database access (bypasses RLS).
+ * Use this for webhook handlers and admin operations.
+ */
+export function createSupabaseServiceClient() {
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
     },
   });
 }
 
-export async function getSession() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { session }, error } = await supabase.auth.getSession();
-  
-  if (error) {
-    console.error('Error getting session:', error);
-    return null;
-  }
-  
-  return session;
+/**
+ * Creates a Supabase client with anon key.
+ * Subject to RLS policies.
+ */
+export function createSupabaseServerClient() {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
+/**
+ * Gets the current user from Clerk.
+ * Returns null if not authenticated.
+ */
 export async function getUser() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  
-  if (error) {
-    console.error('Error getting user:', error);
-    return null;
-  }
-  
+  const user = await currentUser();
   return user;
 }
 
+/**
+ * Gets the user's role from the profiles table.
+ * Uses Clerk user ID to look up the profile.
+ */
 export async function getUserRole() {
-  const user = await getUser();
-  
+  const user = await currentUser();
+
   if (!user) {
     return null;
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseServiceClient();
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('role')
@@ -86,6 +67,9 @@ export async function getUserRole() {
   return profile?.role || 'user';
 }
 
+/**
+ * Checks if the current user is an admin.
+ */
 export async function isAdmin() {
   const role = await getUserRole();
   return role === 'admin';

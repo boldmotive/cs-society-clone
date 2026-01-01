@@ -1,16 +1,17 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 // GET user's orders
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-
-    // Check authentication
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Check authentication with Clerk
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = await createSupabaseServerClient();
 
     // Fetch orders with items
     const { data: orders, error } = await supabase
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
           variant:shop_product_variants(size, color)
         )
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {

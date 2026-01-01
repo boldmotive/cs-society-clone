@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useUser } from '@clerk/nextjs';
 
 export default function ProfilePage() {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
+  const { user: clerkUser } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [bio, setBio] = useState(profile?.bio || '');
@@ -32,7 +34,14 @@ export default function ProfilePage() {
           <h2 className="text-lg font-semibold text-white mb-4">Avatar</h2>
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 rounded-full border-2 border-cyan-500 overflow-hidden bg-gray-700 flex items-center justify-center text-white text-2xl">
-              {profile?.avatar_url ? (
+              {clerkUser?.imageUrl ? (
+                <img
+                  src={clerkUser.imageUrl}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt="Avatar"
@@ -41,7 +50,7 @@ export default function ProfilePage() {
                   crossOrigin="anonymous"
                 />
               ) : (
-                user?.email?.[0]?.toUpperCase() || '?'
+                clerkUser?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase() || '?'
               )}
             </div>
             <div>
@@ -75,7 +84,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <div>
               <label className="block text-gray-400 text-sm mb-1">Email</label>
-              <p className="text-white bg-gray-800/50 px-4 py-3 rounded-lg">{user?.email || 'Not set'}</p>
+              <p className="text-white bg-gray-800/50 px-4 py-3 rounded-lg">{clerkUser?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
               <p className="text-gray-500 text-xs mt-1">Email cannot be changed</p>
             </div>
 

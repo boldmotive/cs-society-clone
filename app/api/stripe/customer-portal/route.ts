@@ -1,25 +1,27 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
   try {
-    // User must be authenticated to access the portal
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // User must be authenticated with Clerk to access the portal
+    const { userId } = await auth();
 
-    if (!user) {
+    if (!userId) {
       return NextResponse.json(
         { error: 'You must be logged in to manage your subscription' },
         { status: 401 }
       );
     }
 
+    const supabase = await createSupabaseServerClient();
+
     // Get user's Stripe customer ID from profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('stripe_customer_id, subscription_status')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (profileError || !profile) {

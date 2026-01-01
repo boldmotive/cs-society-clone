@@ -1,16 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { stripe } from '@/lib/stripe';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-
-    // Check authentication
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Check authentication with Clerk
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Get Clerk user for email
+    const clerkUser = await currentUser();
+
+    const supabase = await createSupabaseServerClient();
 
     // Parse request body
     const body = await request.json();
@@ -133,7 +137,7 @@ export async function POST(request: NextRequest) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('stripe_customer_id, email')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     // Build Stripe line items
@@ -152,7 +156,10 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const origin = request.headers.get('origin') || 'http://localhost:3000';
-    
+
+    // Get email from Clerk user or profile
+    const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || profile?.email || shippingAddress.email;
+
     const sessionParams: any = {
       mode: 'payment',
       payment_method_types: ['card'],
@@ -160,7 +167,7 @@ export async function POST(request: NextRequest) {
       success_url: `${origin}/shop/orders/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/shop/checkout?canceled=true`,
       metadata: {
-        user_id: user.id,
+        user_id: userId,
         order_type: 'shop',
         items: JSON.stringify(verifiedItems.map(item => ({
           variantId: item.variantId,
@@ -177,7 +184,7 @@ export async function POST(request: NextRequest) {
     if (profile?.stripe_customer_id) {
       sessionParams.customer = profile.stripe_customer_id;
     } else {
-      sessionParams.customer_email = user.email || profile?.email || shippingAddress.email;
+      sessionParams.customer_email = userEmail;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);

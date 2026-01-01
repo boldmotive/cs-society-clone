@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase';
 
@@ -26,7 +27,8 @@ const initialFormState: EventForm = {
 const eventTypes = ['Workshop', 'Study Jam', 'Tech Talk', 'Hackathon', 'Social', 'Other'];
 
 export default function AdminEventsPage() {
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isLoaded } = useUser();
+  const { isAdmin, isLoading } = useAuth();
   const router = useRouter();
   const [form, setForm] = useState<EventForm>(initialFormState);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,10 +36,10 @@ export default function AdminEventsPage() {
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    if (!isLoading && (!user || !isAdmin)) {
-      router.push('/login?redirect=/admin/events');
+    if (isLoaded && !isLoading && (!user || !isAdmin)) {
+      router.push('/sign-in?redirect_url=/admin/events');
     }
-  }, [user, isAdmin, isLoading, router]);
+  }, [user, isAdmin, isLoaded, isLoading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

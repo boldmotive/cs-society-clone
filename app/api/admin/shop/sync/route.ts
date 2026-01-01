@@ -1,23 +1,24 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { getSpreadConnectClient, getArticleImageUrl, getArticleImages } from '@/lib/spreadconnect';
 
 // POST sync products from SpreadConnect
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-
-    // Check authentication
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Check authentication with Clerk
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabase = await createSupabaseServerClient();
 
     // Check admin role
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (profile?.role !== 'admin') {

@@ -3,9 +3,11 @@
 import { useAuth } from '@/lib/auth-context';
 import { ManageSubscription } from '@/components/ManageSubscription';
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 
 export default function DashboardPage() {
-  const { user, profile, isSubscribed } = useAuth();
+  const { profile, isSubscribed } = useAuth();
+  const { user: clerkUser } = useUser();
 
   const subscriptionStatus = profile?.subscription_status || 'inactive';
   const subscriptionPlan = profile?.subscription_plan;
@@ -47,16 +49,16 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <div>
               <span className="text-gray-400 text-sm">Email</span>
-              <p className="text-white">{user?.email || 'Not set'}</p>
+              <p className="text-white">{clerkUser?.primaryEmailAddress?.emailAddress || 'Not set'}</p>
             </div>
             <div>
               <span className="text-gray-400 text-sm">Name</span>
-              <p className="text-white">{profile?.full_name || 'Not set'}</p>
+              <p className="text-white">{profile?.full_name || clerkUser?.fullName || 'Not set'}</p>
             </div>
             <div>
               <span className="text-gray-400 text-sm">Member Since</span>
               <p className="text-white">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}
+                {clerkUser?.createdAt ? new Date(clerkUser.createdAt).toLocaleDateString() : 'Unknown'}
               </p>
             </div>
           </div>

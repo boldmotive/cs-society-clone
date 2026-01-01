@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { useUser, useAuth as useClerkAuth } from '@clerk/nextjs';
 import { createSupabaseBrowserClient } from './supabase';
 
 interface UserProfile {
@@ -16,15 +16,13 @@ interface UserProfile {
 }
 
 interface AuthContextType {
-  user: User | null;
+  // Clerk user info is available via useUser() hook directly
+  // This context now primarily provides profile data from Supabase
   profile: UserProfile | null;
-  session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
   isSubscribed: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signInWithGitHub: () => Promise<void>;
-  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,16 +31,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const supabase = createSupabaseBrowserClient();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+  const { isSignedIn } = useClerkAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string, isMounted: boolean) => {
-    console.log('fetchProfile called with userId:', userId);
+    console.log('[AUTH] fetchProfile called with userId:', userId);
 
     // Create a timeout promise that rejects after 5 seconds
-    // This is fast enough for normal queries but prevents hanging
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
         reject(new Error('Profile fetch timeout after 5s'));
@@ -50,10 +47,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     try {
-      console.log('Querying profiles table...');
+      console.log('[AUTH] Querying profiles table...');
 
       // Query profiles table with explicit error handling and timeout protection
-      // Skip redundant getSession() call since caller already verified authentication
       const { data, error } = await Promise.race([
         supabase
           .from('profiles')
@@ -63,16 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         timeoutPromise,
       ]);
 
-      console.log('Profile query completed:', { 
-        dataExists: !!data, 
+      console.log('[AUTH] Profile query completed:', {
+        dataExists: !!data,
         error: error ? `${error.code}: ${error.message}` : null,
-        userId 
+        userId
       });
 
       if (!isMounted) return;
 
       if (error) {
-        console.error('Error fetching profile from Supabase:', {
+        console.error('[AUTH] Error fetching profile from Supabase:', {
           code: error.code,
           message: error.message,
           details: error.details,
@@ -80,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         setProfile(null);
       } else if (data) {
-        console.log('Profile fetched successfully:', {
+        console.log('[AUTH] Profile fetched successfully:', {
           id: data.id,
           email: data.email,
           role: data.role,
@@ -88,173 +84,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         setProfile(data as UserProfile);
       } else {
-        console.log('No profile data found for user - profile may not exist yet');
-        // Create a minimal profile from the user data if profiles table entry doesn't exist
+        console.log('[AUTH] No profile data found for user - profile may not exist yet');
         setProfile(null);
       }
     } catch (err: unknown) {
       if (!isMounted) return;
       if (err instanceof Error && err.message.includes('timeout')) {
-        console.warn('Profile fetch timed out after 5s. This may indicate a slow network connection or Supabase latency.');
+        console.warn('[AUTH] Profile fetch timed out after 5s.');
       } else {
-        console.error('Error in fetchProfile:', {
+        console.error('[AUTH] Error in fetchProfile:', {
           error: err instanceof Error ? err.message : String(err),
-          stack: err instanceof Error ? err.stack : undefined,
         });
       }
       setProfile(null);
     } finally {
       if (isMounted) {
-        console.log('Profile fetch complete, setting isLoading to false');
         setIsLoading(false);
       }
     }
   }, []);
 
+  // Function to manually refresh profile
+  const refreshProfile = useCallback(async () => {
+    if (clerkUser?.id) {
+      setIsLoading(true);
+      await fetchProfile(clerkUser.id, true);
+    }
+  }, [clerkUser?.id, fetchProfile]);
+
+  // Fetch profile when Clerk user changes
   useEffect(() => {
     let mounted = true;
-    let sessionCheckAttempts = 0;
-    const MAX_SESSION_CHECK_ATTEMPTS = 5;
-    const RETRY_DELAY_MS = 300;
 
-    // Explicitly fetch the initial session to sync with server-set cookies
-    // This is critical after OAuth redirects where the server sets the session cookie
-    async function initializeSession() {
-      try {
-        sessionCheckAttempts++;
-        console.log(`[AUTH] Initializing session (attempt ${sessionCheckAttempts}/${MAX_SESSION_CHECK_ATTEMPTS})...`);
-        
-        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('[AUTH] Session error:', sessionError);
-          if (mounted) {
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        if (!mounted) return;
-
-        console.log('[AUTH] Initial session check:', initialSession?.user?.email || 'no session');
-
-        if (initialSession?.user) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-          await fetchProfile(initialSession.user.id, mounted);
-        } else {
-          // If no session found and we haven't reached max attempts, retry after a short delay
-          // This helps handle cases where cookies are being set asynchronously in Vercel/production
-          if (sessionCheckAttempts < MAX_SESSION_CHECK_ATTEMPTS) {
-            console.log(`[AUTH] No session found, retrying in ${RETRY_DELAY_MS}ms...`);
-            setTimeout(() => {
-              if (mounted) initializeSession();
-            }, RETRY_DELAY_MS);
-          } else {
-            console.log('[AUTH] No session found after max attempts');
-            setIsLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error('[AUTH] Error getting initial session:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
+    if (!clerkLoaded) {
+      // Clerk is still loading
+      return;
     }
 
-    // Initialize session immediately
-    initializeSession();
-
-    // Listen for auth changes - this handles subsequent auth events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!mounted) return;
-
-        console.log('[AUTH] State changed:', event, 'User:', newSession?.user?.email || 'none');
-
-        // Skip INITIAL_SESSION as we handle it above with getSession()
-        if (event === 'INITIAL_SESSION') {
-          return;
-        }
-
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-
-        // Fetch profile on sign in events
-        if (newSession?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-          // Always fetch profile on SIGNED_IN to ensure we have the latest data
-          console.log('Fetching profile for user:', newSession.user.id);
-          await fetchProfile(newSession.user.id, mounted);
-        } else if (!newSession?.user) {
-          console.log('No user in session, clearing profile');
-          setProfile(null);
-          setIsLoading(false);
-        }
-      }
-    );
+    if (isSignedIn && clerkUser?.id) {
+      console.log('[AUTH] Clerk user signed in:', clerkUser.primaryEmailAddress?.emailAddress);
+      fetchProfile(clerkUser.id, mounted);
+    } else {
+      // User is signed out or Clerk has finished loading with no user
+      console.log('[AUTH] No Clerk user, clearing profile');
+      setProfile(null);
+      setIsLoading(false);
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
-  }, [fetchProfile]);
-
-  async function signInWithGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) console.error('Google sign in error:', error);
-  }
-
-  async function signInWithGitHub() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    if (error) console.error('GitHub sign in error:', error);
-  }
-
-  async function signOut() {
-    try {
-      setIsLoading(true);
-      // Use scope: 'local' to only sign out the current browser tab/session
-      // This avoids issues when the global session is already invalidated
-      const { error } = await supabase.auth.signOut({ scope: 'local' });
-      if (error) {
-        console.error('Sign out error:', error);
-        // Even if there's an error, still clear local state
-      }
-      // Explicitly clear state after sign out
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-    } catch (err) {
-      console.error('Sign out failed:', err);
-      // Still clear local state on error
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  }, [clerkLoaded, isSignedIn, clerkUser?.id, fetchProfile]);
 
   const value: AuthContextType = {
-    user,
     profile,
-    session,
-    isLoading,
+    isLoading: !clerkLoaded || isLoading,
     isAdmin: profile?.role === 'admin',
     isSubscribed: profile?.subscription_status === 'active',
-    signInWithGoogle,
-    signInWithGitHub,
-    signOut,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -267,4 +154,3 @@ export function useAuth() {
   }
   return context;
 }
-
